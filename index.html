@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>ReelLife</title>
+        <link rel="stylesheet" href="style.css" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    </head>
+    <body>
+        <div class="wrapper">
+            <header>
+                <h1>ReelLife</h1>
+            </header>
+            <main>
+                <section id="selfSection" class="inactive s1">
+                    <h2 id="username">Me</h2>
+                    <img src="profile.jpg" alt="profile" />
+                    <h3 id="phone">Phone Number</h3>
+                    <h3 id="email">Email</h3>
+                </section>
+                <section id="familySection" class="inactive s2">
+                    <h2>Family</h2>
+                    <h3>Your Family Tree</h3>
+                    <div class="familyTree">
+                        <div class="familyTreeRow R1">
+                            <div class="r1 c1">
+                                <h3>Grandma (moms side)
+                                    <img src="profile.jpg" alt="profile" />
+                                </h3>
+                            </div>
+                            <div class="r1 c2">
+                                <h3>Grandpa (moms side)
+                                    <img src="profile.jpg" alt="profile" />
+                                </h3>
+                            </div>
+                            <div class="r1 c3">
+                                <h3>Grandma (dads side)
+                                    <img src="profile.jpg" alt="profile" />
+                                </h3>
+                            </div>
+                            <div class="r1 c4">
+                                <h3>Grandpa (dads side)
+                                    <img src="profile.jpg" alt="profile" />
+                                </h3>
+                            </div>
+                        </div>
+                        <div class="familyTreeRow R2">
+                            <div class="r2 c1">
+                                <h3>Mom
+                                    <img src="profile.jpg" alt="profile" />
+                                </h3>
+                            </div>
+                            <div class="r2 c2">
+                                <h3>Dad
+                                    <img src="profile.jpg" alt="profile" />
+                                </h3>
+                            </div>
+                        </div>
+                        <div class="familyTreeRow R3">
+                            <div class="r3 c1">
+                                <h3>Me
+                                    <img src="profile.jpg" alt="profile" />
+                                </h3>
+                            </div>
+                            <div class="r3 c2">
+                                <h3>Sister
+                                    <img src="profile.jpg" alt="profile" />
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="addRow">Add Row</button>
+                </section>
+                <section id="tellYourStorySection" class="active s3">
+                    <h2>Tell Your Story</h2>
+                </section>
+                <section id="friendsSection" class="inactive s4">
+                    <h2>Friends</h2>
+                </section>
+                <section id="communitySection" class="inactive s5">
+                    <h2>Community</h2>
+                </section>
+            </main>
+            <footer>
+                <div class="button left" id="self">Me</div>
+                <div class="button" id="family">Family</div>
+                <div class="middle button" id="tellYourStory">
+                    <div id="tellYourStoryButton">
+                        <ion-icon name="mic-outline"></ion-icon>
+                    </div>
+                </div>
+                <div class="button" id="friends">Friends</div>
+                <div class="button right" id="community">Community</div>
+            </footer>
+        </div>
+        <script type="text/javascript" src="data.js"></script>
+        <script type="text/javascript" src="script.js"></script>
+        <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
+        <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+    </body>
+</html>
