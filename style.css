@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Crafty+Girls&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
 ::selection {
     color: #ffffff;
     background-color: #000000;
@@ -7,22 +8,33 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: "Crafty Girls", cursive;
+    font-family: Lato, sans-serif;
+    font-weight: 400;
+    overflow-x: hidden;
 }
-body, html {
-    height: 100%;
+h1 {
+    font-family: "Crafty Girls", cursive;
+    font-weight: 400;
+}
+h2 {
+    font-weight: 700;
+}
+.inactive.none {
+    display: none;
 }
 .wrapper {
     display: grid;
-    grid-template-rows: 10vh 1fr 8vmin;
-    min-height: 100%;
+    grid-template-rows: 8vh 1fr;
 }
 footer {
+    position: fixed;
+    bottom: 0;
     height: 8vmin;
     display: grid;
     grid-template-columns: 1fr 1fr 8vmin 1fr 1fr;
-    margin: 0 20vw;
     z-index: 999;
+    width: 60vw;
+    left: 20vw;
 }
 footer > .button {
     background-color: #333333;
@@ -68,6 +80,7 @@ footer > .button:not(.middle):active {
     border-radius: 0 50% 0 0;
 }
 header {
+    height: 8vh;
     padding-top: 2vh;
     text-align: center;
     border-bottom: 2px solid #dddddd;
@@ -88,6 +101,9 @@ main > section {
     opacity: 1;
     z-index: 100;
 }
+main {
+    margin: 0 0 8vmin;
+}
 main > section h2, main > section h3 {
     text-align: center;
 }
@@ -99,13 +115,42 @@ main > section#selfSection img {
     width: 10vmin;
 }
 .familyTree {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 90vw 10vw;
 }
 .familyTreeRow {
     display: flex;
     flex-direction: row;
-    width: 100vw;
+    grid-column: 1;
+    justify-content: space-evenly;
+    height: calc(40px + 10vmin);
+}
+.familyTreeRowAddBtn {
+    display: grid;
+    align-items: center;
+    justify-content: center;
+    grid-column: 2;
+    border: none;
+    border-radius: 25%;
+    cursor: pointer;
+}
+.familyTreeRowAddBtn:nth-of-type(2n) {
+    background-color: #cfcfcf;
+}
+.familyTreeRowAddBtn:nth-of-type(2n+1) {
+    background-color: #dfdfdf;
+}
+.familyTreeRowAddBtn:nth-of-type(2n):hover {
+    background-color: #bbbbbb;
+}
+.familyTreeRowAddBtn:nth-of-type(2n+1):hover {
+    background-color: #cccccc;
+}
+.familyTreeRowAddBtn:nth-of-type(2n):active {
+    background-color: #9f9f9f;
+}
+.familyTreeRowAddBtn:nth-of-type(2n+1):active {
+    background-color: #afafaf;
 }
 .familyTreeRow > h3 {
     text-align: center;
@@ -125,5 +170,58 @@ main > section#selfSection img {
     width: 20vw;
     height: 5vh;
     margin: 0 auto;
-    
+
+}
+.friendsWrapper, .otherStories {
+    display: grid;
+    padding: 0 5vw;
+    grid-template-columns: 1fr 1fr;
+    gap: 2vh 5vw;
+}
+.friendStory, .otherStory {
+    height: 20vh;
+    box-shadow: 1px 5px 8px 5px #bfbfbf;
+    padding: 2.5vmin;
+    border-radius: 10%;
+    cursor: pointer;
+}
+.friendStory:hover, .otherStory:hover {
+    box-shadow: 1px 5px 8px 5px #888888;
+}
+.friendStory:active, .otherStory:active {
+    box-shadow: 1px 5px 8px 5px #666666;
+}
+.friendStory img, .otherStory img {
+    width: 10vmin;
+    height: 10vmin;
+    float: left;
+}
+.friendStory p, .otherStory p {
+    padding-left: calc(10vmin + 5px);
+}
+#featuredStory {
+    width: 80vw;
+    margin: 0 10vw 5vh;
+    box-shadow: 1px 5px 8px 5px #bfbfbf;
+    cursor: pointer;
+    height: 30vh;
+    border-radius: 10%;
+}
+#featuredStory:hover {
+    box-shadow: 1px 5px 8px 5px #888888;
+}
+#featuredStory:active {
+    box-shadow: 1px 5px 8px 5px #666666;
+}
+#featuredStory p {
+    padding-left: 5px;
+}
+#featuredStory img {
+    width: 80vw;
+    height: 10vh;
+    object-fit: cover;
+}
+.friendsWrapper, .otherStories {
+    box-sizing: content-box;
+    padding-bottom: 10px;
 }

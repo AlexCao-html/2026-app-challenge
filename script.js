@@ -1,34 +1,85 @@
-document.querySelector("#self").addEventListener("click", () => {
-    $("main > section").addClass("inactive");
-    $("main > section").removeClass("active");
-    $("#selfSection").addClass("active");
-    $("#selfSection").removeClass("inactive");
+$("#self").click(() => {
+    $("#selfSection").removeClass("none");
+    setTimeout(() => {
+        $("main > section").addClass("inactive");
+        $("main > section").removeClass("active");
+        $("#selfSection").addClass("active");
+        $("#selfSection").removeClass("inactive");
+    }, 1);
+    setTimeout(() => {
+        $("main > section").addClass("none");
+        $("#selfSection").removeClass("none");
+    }, 801);
 });
-document.querySelector("#family").addEventListener("click", () => {
-    $("main > section").addClass("inactive");
-    $("main > section").removeClass("active");
-    $("#familySection").addClass("active");
-    $("#familySection").removeClass("inactive");
+$("#family").click(() => {
+    $("#familySection").removeClass("none");
+    setTimeout(() => {
+        $("main > section").addClass("inactive");
+        $("main > section").removeClass("active");
+        $("#familySection").addClass("active");
+        $("#familySection").removeClass("inactive");
+    }, 1);
+    setTimeout(() => {
+        $("main > section").addClass("none");
+        $("#familySection").removeClass("none");
+    }, 801);
 });
-document.querySelector("#tellYourStoryButton").addEventListener("click", () => {
-    $("main > section").addClass("inactive");
-    $("main > section").removeClass("active");
-    $("#tellYourStorySection").addClass("active");
-    $("#tellYourStorySection").removeClass("inactive");
+$("#tellYourStoryButton").click(() => {
+    $("#tellYourStorySection").removeClass("none");
+    setTimeout(() => {
+        $("main > section").addClass("inactive");
+        $("main > section").removeClass("active");
+        $("#tellYourStorySection").addClass("active");
+        $("#tellYourStorySection").removeClass("inactive");
+    }, 1);
+    setTimeout(() => {
+        $("main > section").addClass("none");
+        $("#tellYourStorySection").removeClass("none");
+    }, 801);
 });
-document.querySelector("#friends").addEventListener("click", () => {
-    $("main > section").addClass("inactive");
-    $("main > section").removeClass("active");
-    $("#friendsSection").addClass("active");
-    $("#friendsSection").removeClass("inactive");
+$("#friends").click(() => {
+    $("#friendsSection").removeClass("none");
+    setTimeout(() => {
+        $("main > section").addClass("inactive");
+        $("main > section").removeClass("active");
+        $("#friendsSection").addClass("active");
+        $("#friendsSection").removeClass("inactive");
+    }, 1);
+    setTimeout(() => {
+        $("main > section").addClass("none");
+        $("#friendsSection").removeClass("none");
+    }, 801);
 });
-document.querySelector("#community").addEventListener("click", () => {
-    $("main > section").addClass("inactive");
-    $("main > section").removeClass("active");
-    $("#communitySection").addClass("active");
-    $("#communitySection").removeClass("inactive");
+$("#community").click(() => {
+    $("#communitySection").removeClass("none");
+    setTimeout(() => {
+        $("main > section").addClass("inactive");
+        $("main > section").removeClass("active");
+        $("#communitySection").addClass("active");
+        $("#communitySection").removeClass("inactive");
+    }, 1);
+    setTimeout(() => {
+        $("main > section").addClass("none");
+        $("#communitySection").removeClass("none");
+    }, 801);
 });
-
-for (var i = 1; i <= document.querySelector(".familyTree").childElementCount; i++) {
-    $(`.r${i}`).css("width", `${100.0 / document.querySelector(`.R${i}`).childElementCount}vw`);
-}
+var curRowCount = 3;
+$("#addRow").click(() => {
+    curRowCount++;
+    document.querySelector(".familyTree").innerHTML += `
+    <div class="familyTreeRow R${curRowCount}">
+        <div class="r3 c1">
+            <h3>Unnamed
+                <img src="profile.jpg" alt="profile" />
+            </h3>
+        </div>
+    </div>
+    <button class="familyTreeRowAddBtn AR${curRowCount}">Add</button>`;
+});
+$("#removeRow").click(() => {
+    curRowCount--;
+    document.querySelector(".familyTree").removeChild(document.querySelector(".familyTree").lastChild);
+    document.querySelector(".familyTree").removeChild(document.querySelector(".familyTree").lastChild);
+    document.querySelector(".familyTree").removeChild(document.querySelector(".familyTree").lastChild);
+    document.querySelector(".familyTree").removeChild(document.querySelector(".familyTree").lastChild);
+});

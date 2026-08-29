@@ -46,6 +46,9 @@
                                 </h3>
                             </div>
                         </div>
+                        <button class="familyTreeRowAddBtn AR1">
+                            Add
+                        </button>
                         <div class="familyTreeRow R2">
                             <div class="r2 c1">
                                 <h3>Mom
@@ -58,6 +61,9 @@
                                 </h3>
                             </div>
                         </div>
+                        <button class="familyTreeRowAddBtn AR2">
+                            Add
+                        </button>
                         <div class="familyTreeRow R3">
                             <div class="r3 c1">
                                 <h3>Me
@@ -70,7 +76,11 @@
                                 </h3>
                             </div>
                         </div>
+                        <button class="familyTreeRowAddBtn AR3">
+                            Add
+                        </button>
                     </div>
+                    <button id="removeRow">Remove Row</button>
                     <button id="addRow">Add Row</button>
                 </section>
                 <section id="tellYourStorySection" class="active s3">
@@ -78,11 +88,68 @@
                 </section>
                 <section id="friendsSection" class="inactive s4">
                     <h2>Friends</h2>
+                    <div class="friendsWrapper">
+                        <div class="friendStory">
+                            <img src="profile.jpg" />
+                            <h3>My Grandmother's Recipes</h3>
+                            <p class="tags">#Culture/Faith #Family</p>
+                            <p class="setting"><span class="place">Chicago</span> &bullet; <span class="time">1950s-Present</span></p>
+                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>
+                        </div>
+                        <div class="friendStory">
+                            <img src="profile.jpg" />
+                            <h3>Ellis Island Memories</h3>
+                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>
+                        </div>
+                        <div class="friendStory">
+                            <img src="profile.jpg" />
+                            <h3>Opening the Corner Store</h3>
+                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>
+                        </div>
+                        <div class="friendStory">
+                            <img src="profile.jpg" />
+                            <h3>Working the Frields in California</h3>
+                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>  
+                      </div>
+                    </div>
                 </section>
                 <section id="communitySection" class="inactive s5">
                     <h2>Community</h2>
+                    <h3>Featured</h3>
+                    <div id="featuredStory">
+                        <img src="guangzhou.jpg" />
+                        <h3 id="featuredTitle">Leaving Guangzhou at 18</h3>
+                        <p class="tags">#Culture/Faith #Family</p>
+                        <p class="setting"><span class="place">Chicago</span> &bullet; <span class="time">1950s-Present</span></p>
+                        <p class="summary">I still remember the smell of the ocean when we arrived... It was the beginning of a new life.</p>
+                        <p class="byAuthor">By <span class="featured author">Mei Lin</span></p>
+                    </div>
+                    <h3>Recent Stories</h3>
+                    <div class="otherStories">
+                        <div class="otherStory">
+                            <img src="profile.jpg" />
+                            <h3>My Grandmother's Recipes</h3>
+                            <p class="tags">#Culture/Faith #Family</p>
+                            <p class="setting"><span class="place">Chicago</span> &bullet; <span class="time">1950s-Present</span></p>
+                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>                        </div>
+                        <div class="otherStory">
+                            <img src="profile.jpg" />
+                            <h3>Ellis Island Memories</h3>
+                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>
+                        </div>
+                        <div class="otherStory">
+                            <img src="profile.jpg" />
+                            <h3>Opening the Corner Store</h3>
+                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>
+                        </div>
+                        <div class="otherStory">
+                            <img src="profile.jpg" />
+                            <h3>Working the Frields in California</h3>
+                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>                        </div>
+                    </div>
                 </section>
             </main>
+        </div>
             <footer>
                 <div class="button left" id="self">Me</div>
                 <div class="button" id="family">Family</div>
@@ -94,7 +161,6 @@
                 <div class="button" id="friends">Friends</div>
                 <div class="button right" id="community">Community</div>
             </footer>
-        </div>
         <script type="text/javascript" src="data.js"></script>
         <script type="text/javascript" src="script.js"></script>
         <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
