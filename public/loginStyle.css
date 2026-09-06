@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Crafty+Girls&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+::selection {
+    color: #ffffff;
+    background-color: #000000;
+}
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Lato, sans-serif;
+    font-weight: 400;
+    overflow-x: hidden;
+}
+h1 {
+    font-family: "Crafty Girls", cursive;
+    font-weight: 400;
+    text-align: center;
+}
+.loginBox {
+    height: 60vw;
+    width: 40vw;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    background: #00000030;
+    padding: 5vw 0;
+}
+.loginBox > div {
+    text-align: center;
+}
+a {
+    color: #8080ff;
+}
+a:visited {
+    color: #8080ff;
+}
+a:hover {
+    color: #6060ff;
+}
+a:active {
+    color: #ff6060;
+}
+#signInButton {
+    width: 10vw;
+    text-align: center;
+    box-sizing: content-box;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: #bfffbf;
+    margin: 5vw auto 0;
+    cursor: pointer;
+}
+#signInButton:hover {
+    background-color: #a0ffa0;
+}
+#signInButton:active {
+    background-color: #80ff80;
+}
