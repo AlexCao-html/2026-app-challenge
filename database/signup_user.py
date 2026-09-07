@@ -1,7 +1,8 @@
-"""One-off script: signs up a single user via login_api.signup."""
+"""One-off script: signs up a single user via the FastAPI app's signup logic directly."""
 
-import login_api
-from db import Database
+from app.database import Base, engine, SessionLocal
+from app.models import User
+from app.security import hash_password
 
 USERNAME = "mangomustardman"
 EMAIL = "mangomustardman@gmail.com"
@@ -9,13 +10,24 @@ PASSWORD = "miguel423miguel"
 
 
 def main():
-    with Database("app.db") as db:
-        login_api.init_db(db)
-        try:
-            user_id = login_api.signup(db, USERNAME, EMAIL, PASSWORD)
-            print(f"Created user {EMAIL!r} (username {USERNAME!r}) with id {user_id}")
-        except login_api.AuthError as e:
-            print(f"Signup failed ({e.status}): {e.message}")
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        email = EMAIL.strip().lower()
+        if db.query(User).filter(User.email == email).first():
+            print(f"Signup failed (409): Email already registered")
+            return
+        if db.query(User).filter(User.username == USERNAME).first():
+            print(f"Signup failed (409): Username already taken")
+            return
+
+        user = User(username=USERNAME, email=email, password_hash=hash_password(PASSWORD))
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        print(f"Created user {email!r} (username {USERNAME!r}) with id {user.id}")
+    finally:
+        db.close()
 
 
 if __name__ == "__main__":
