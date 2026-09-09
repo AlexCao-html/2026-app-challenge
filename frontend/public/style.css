@@ -37,21 +37,24 @@ footer {
     left: 20vw;
 }
 footer > .button {
-    background-color: #333333;
+    background-color: #88888866;
     display: grid;
     place-items: center;
     border: 1px solid #ffffff88;
     color: #ffffff;
+    backdrop-filter: blur(2px);
 }
 footer > .button:not(.middle) {
     font-size: 16pt;
     cursor: pointer;
 }
 footer > .button:not(.middle):hover {
-    background-color: #444444;
+    background-color: #88888888;
+    backdrop-filter: blur(4px);
 }
 footer > .button:not(.middle):active {
-    background-color: #555555;
+    background-color: #88888899;
+    backdrop-filter: blur(6px);
 }
 .middle.button > * {
     background-color: #ffffff;
@@ -83,7 +86,8 @@ header {
     height: 8vh;
     padding-top: 2vh;
     text-align: center;
-    border-bottom: 2px solid #dddddd;
+    backdrop-filter: blur(10px);
+    background-color: #ffffff66;
 }
 main > section {
     position: absolute;
@@ -197,6 +201,8 @@ main > section#selfSection img {
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s ease-in-out;
+    background-color: #ffffff22;
+    backdrop-filter: blur(10px);
 }
 .friendStory:hover, .otherStory:hover {
     box-shadow: 1px 5px 8px 5px #88888866;
@@ -221,6 +227,8 @@ main > section#selfSection img {
     height: 30vh;
     border-radius: 50px;
     transition: all 0.3s ease-in-out;
+    background-color: #ffffff22;
+    backdrop-filter: blur(10px);
 }
 #featuredStory:hover {
     box-shadow: 1px 5px 8px 5px #88888866;
@@ -252,13 +260,7 @@ main > section#selfSection img {
     border-radius: 40px;
     background-color: #bfffbf;
 }
-.inactivePage {
-    display: none;
-}
-.hidden {
-    display: none !important;
-}
-#testSection {
+#tellYourStorySection {
     display: flex;
     flex-direction: column;
     height: calc(95vh - 10vh - 8vmin);
@@ -277,6 +279,8 @@ main > section#selfSection img {
     padding: 1vh 1vw;
     overflow-y: auto;
     min-height: 0;
+    background-color: #ffffff22;
+    backdrop-filter: blur(5px);
 }
 #newTestConversationBtn {
     width: 100%;
@@ -311,6 +315,7 @@ main > section#selfSection img {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    backdrop-filter: blur(5px);
 }
 .testEmptyState {
     flex: 1;
@@ -375,4 +380,23 @@ main > section#selfSection img {
 }
 .message-form button:hover {
     background-color: #a0ffa0;
+}
+#profilePicture {
+    cursor: pointer;
+}
+.background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: url('bg2.jpg');
+    background-size: cover;
+    background-position: center;
+    z-index: -100;
+}
+.familyTreeRow {
+    background-color: #ffffff88;
+    backdrop-filter: blur(10px);
+    margin-top: 2vh;
 }

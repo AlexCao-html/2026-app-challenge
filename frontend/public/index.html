@@ -9,6 +9,7 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     </head>
     <body>
+        <div class="background"></div>
         <div class="wrapper">
             <header>
                 <h1>ReelLife</h1>
@@ -16,7 +17,7 @@
             <main>
                 <section id="selfSection" class="inactive s1">
                     <h2 id="username">Me</h2>
-                    <img src="profile.jpg" alt="profile" />
+                    <img src="profile.jpg" alt="profile" id="profilePicture" />
                     <h3 id="phone">Phone Number</h3>
                     <h3 id="email">Email</h3>
                     <button id="logoutButton">Log out</button>
@@ -86,6 +87,24 @@
                 </section>
                 <section id="tellYourStorySection" class="active s3">
                     <h2>Tell Your Story</h2>
+                    <div class="testLayout">
+                        <aside class="testSidebar">
+                            <button id="newTestConversationBtn">+ New conversation</button>
+                            <ul id="testConversationList" class="testConversationList"></ul>
+                        </aside>
+                        <div class="testMain">
+                            <div id="testEmptyState" class="testEmptyState">
+                                Select a conversation, or start a new one.
+                            </div>
+                            <div id="testConversationPanel" class="testConversationPanel hidden">
+                                <div id="testMessageList" class="message-list"></div>
+                                <form id="testMessageForm" class="message-form">
+                                    <textarea id="testMessageInput" placeholder="Say something..." required></textarea>
+                                    <button type="submit">Send</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </section>
                 <section id="friendsSection" class="inactive s4">
                     <h2>Friends</h2>
@@ -150,25 +169,6 @@
                     </div>
                 </section>
                 <section id="testSection" class="inactive s6">
-                    <h2>Test</h2>
-                    <div class="testLayout">
-                        <aside class="testSidebar">
-                            <button id="newTestConversationBtn">+ New conversation</button>
-                            <ul id="testConversationList" class="testConversationList"></ul>
-                        </aside>
-                        <div class="testMain">
-                            <div id="testEmptyState" class="testEmptyState">
-                                Select a conversation, or start a new one.
-                            </div>
-                            <div id="testConversationPanel" class="testConversationPanel hidden">
-                                <div id="testMessageList" class="message-list"></div>
-                                <form id="testMessageForm" class="message-form">
-                                    <textarea id="testMessageInput" placeholder="Say something..." required></textarea>
-                                    <button type="submit">Send</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
                 </section>
             </main>
         </div>
@@ -181,8 +181,7 @@
                 </div>
             </div>
             <div class="button" id="friends">Friends</div>
-            <div class="button" id="community">Community</div>
-            <div class="button right" id="test">Test</div>
+            <div class="button right" id="community">Community</div>
         </footer>
         <script type="text/javascript" src="config.js"></script>
         <script type="text/javascript" src="storage_api.js"></script>
