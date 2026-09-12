@@ -8,12 +8,15 @@ const toggleModeLink = document.querySelector("#toggleMode");
 const formTitle = document.querySelector("#formTitle");
 
 let mode = "login";
+let submitting = false;
 
 function setError(message) {
     errorMessage.textContent = message || "";
 }
 
 async function handleSubmit() {
+    if (submitting) return;
+    submitting = true;
     setError("");
     const email = emailInput.value.trim();
     const password = passwordInput.value;
@@ -31,10 +34,30 @@ async function handleSubmit() {
         } else {
             setError("Could not reach the server. Is the API running?");
         }
+        submitting = false;
     }
 }
 
 signInButton.addEventListener("click", handleSubmit);
+
+// There's no <form> here, so Enter has to be wired up by hand: from any of the
+// fields, and from the Sign In button itself once it's focused.
+for (const input of [usernameInput, emailInput, passwordInput]) {
+    input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            handleSubmit();
+        }
+    });
+}
+
+signInButton.addEventListener("keydown", (event) => {
+    // Space is what a real <button> responds to as well.
+    if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleSubmit();
+    }
+});
 
 toggleModeLink.addEventListener("click", (event) => {
     event.preventDefault();
