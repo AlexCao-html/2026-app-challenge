@@ -10,6 +10,12 @@
     padding: 0;
     font-family: Lato, sans-serif;
     font-weight: 400;
+}
+/* Only the page itself should suppress sideways scrolling (the off-screen
+   .inactive sections would otherwise widen it). Putting overflow-x on `*`
+   also forced overflow-y to compute to `auto` on every element, which is what
+   grew a scrollbar inside the header. */
+html, body {
     overflow-x: hidden;
 }
 h1 {
@@ -31,7 +37,7 @@ footer {
     bottom: 0;
     height: 8vmin;
     display: grid;
-    grid-template-columns: 1fr 1fr 8vmin 1fr 1fr 1fr;
+    grid-template-columns: repeat(5, 1fr);
     z-index: 999;
     width: 60vw;
     left: 20vw;
@@ -43,38 +49,16 @@ footer > .button {
     border: 1px solid #ffffff88;
     color: #ffffff;
     backdrop-filter: blur(2px);
-}
-footer > .button:not(.middle) {
-    font-size: 16pt;
+    font-size: clamp(10px, 1.5vw, 16pt);
     cursor: pointer;
 }
-footer > .button:not(.middle):hover {
+footer > .button:hover {
     background-color: #88888888;
     backdrop-filter: blur(4px);
 }
-footer > .button:not(.middle):active {
+footer > .button:active {
     background-color: #88888899;
     backdrop-filter: blur(6px);
-}
-.middle.button > * {
-    background-color: #ffffff;
-    height: 6vmin;
-    width: 6vmin;
-    border-radius: 100%;
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-}
-
-.middle.button > * > ion-icon {
-    font-size: 32pt;
-    color: #000000;
-}
-.middle.button > *:hover {
-    background-color: #ffffffbb;
-}
-.middle.button > *:active {
-    background-color: #ffffff88;
 }
 .left.button {
     border-radius: 50px 0 0 0;
@@ -84,10 +68,49 @@ footer > .button:not(.middle):active {
 }
 header {
     height: 8vh;
-    padding-top: 2vh;
-    text-align: center;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 2vw;
     backdrop-filter: blur(10px);
     background-color: #ffffff66;
+}
+header h1 {
+    /* Scales with the bar's height so the title can't outgrow it on a short
+       window, and with the width so it can't run into the buttons on a narrow
+       one. Unchanged (32px) at desktop sizes. */
+    font-size: clamp(18px, min(4.5vh, 6vw), 32px);
+    line-height: 1.2;
+}
+/* Taken out of the flow so the title stays centred on the page rather than on
+   whatever space the buttons leave behind. */
+.headerActions {
+    position: absolute;
+    right: 2vw;
+    display: flex;
+    gap: 1vw;
+}
+.headerActions button {
+    padding: 0.9vh 1.2vw;
+    border: 1px solid #ffffff88;
+    border-radius: 40px;
+    background-color: #ffffff88;
+    backdrop-filter: blur(4px);
+    color: #333333;
+    font-size: clamp(9px, 1.1vw, 13px);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+.headerActions button:hover {
+    background-color: #ffffffcc;
+}
+#headerLogoutButton {
+    background-color: #ffbfbfaa;
+}
+#headerLogoutButton:hover {
+    background-color: #ffa0a0;
 }
 main > section {
     position: absolute;
@@ -399,4 +422,17 @@ main > section#selfSection img {
     background-color: #ffffff88;
     backdrop-filter: blur(10px);
     margin-top: 2vh;
+}
+.hidden {
+    display: none;
+}
+/* Set by script.js while it waits for the sign-in check, so the default page
+   doesn't flash past before the saved page is restored. Cleared either way. */
+body.restoringPage main {
+    visibility: hidden;
+}
+/* The restored page should look like it was there all along, so don't let it
+   slide/fade in from .inactive the way a footer click does. */
+body.restoringPage main > section {
+    transition: none;
 }
