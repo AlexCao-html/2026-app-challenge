@@ -241,6 +241,7 @@ main > section#selfSection img {
     position: relative;
     left: -2.5vmin;
     top: -2.5vmin;
+    border-top-left-radius: 50px;
 }
 #featuredStory {
     width: 80vw;
@@ -267,6 +268,8 @@ main > section#selfSection img {
     width: 80vw;
     height: 10vh;
     object-fit: cover;
+    border-top-left-radius: 50px;
+    border-top-right-radius: 50px;
 }
 .friendsWrapper, .otherStories {
     box-sizing: content-box;
