@@ -2,6 +2,7 @@ const usernameField = document.querySelector("#usernameField");
 const usernameInput = document.querySelector("#username");
 const emailInput = document.querySelector("#email");
 const passwordInput = document.querySelector("#password");
+const passwordHint = document.querySelector("#passwordHint");
 const errorMessage = document.querySelector("#errorMessage");
 const signInButton = document.querySelector("#signInButton");
 const toggleModeLink = document.querySelector("#toggleMode");
@@ -63,6 +64,7 @@ toggleModeLink.addEventListener("click", (event) => {
     event.preventDefault();
     mode = mode === "login" ? "signup" : "login";
     usernameField.classList.toggle("hidden", mode !== "signup");
+    passwordHint.classList.toggle("hidden", mode !== "signup");
     formTitle.textContent = mode === "signup" ? "Sign Up" : "Login";
     signInButton.textContent = mode === "signup" ? "Sign Up" : "Sign In";
     toggleModeLink.textContent =

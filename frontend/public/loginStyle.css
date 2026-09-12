@@ -67,6 +67,11 @@ a:active {
     text-align: center;
     min-height: 1.2em;
 }
+.hint {
+    font-size: 0.8em;
+    color: #404040;
+    text-align: center;
+}
 .background {
     position: fixed;
     top: 0;

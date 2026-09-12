@@ -17,6 +17,7 @@ const DEFAULT_MEMBER_NAME = "Unnamed";
 const familyTreeEl = document.querySelector(".familyTree");
 const addFamilyRowBtn = document.querySelector("#addRow");
 const removeFamilyRowBtn = document.querySelector("#removeRow");
+const resetFamilyTreeBtn = document.querySelector("#resetTree");
 
 let familyTree = { rows: [] };
 
@@ -35,6 +36,8 @@ function readFamilyTreeFromDom() {
                     // The name is the text before the <img>, e.g. "Grandma (moms side)".
                     name: heading?.firstChild?.textContent.trim() || DEFAULT_MEMBER_NAME,
                     photo: img?.getAttribute("src") || DEFAULT_MEMBER_PHOTO,
+                    // data-self marks the account holder's own node in the markup.
+                    is_self: memberEl.hasAttribute("data-self"),
                 };
             }),
         })),
@@ -59,16 +62,19 @@ function normalizeFamilyTree(raw) {
             members: (Array.isArray(row?.members) ? row.members : []).map((member) => ({
                 name: String(member?.name ?? "").trim() || DEFAULT_MEMBER_NAME,
                 photo: String(member?.photo ?? "").trim() || DEFAULT_MEMBER_PHOTO,
+                is_self: Boolean(member?.is_self),
             })),
         })),
     };
 }
 
-// Fetches this user's tree. A brand new account comes back with no rows, so
-// the markup's layout is saved as their starting point.
+// Fetches this user's tree. Only an account that has never saved one gets the
+// markup's layout as a starting point -- a tree that was deliberately emptied
+// comes back with `seeded` set and is left alone.
 async function loadFamilyTree() {
-    const stored = normalizeFamilyTree(await storageApi.getFamily());
-    if (stored.rows.length > 0) return stored;
+    const payload = await storageApi.getFamily();
+    const stored = normalizeFamilyTree(payload);
+    if (payload?.seeded || stored.rows.length > 0) return stored;
 
     return normalizeFamilyTree(await storageApi.saveFamily(startingTree()));
 }
@@ -121,7 +127,7 @@ async function addFamilyMember(rowIndex, name, photo = DEFAULT_MEMBER_PHOTO) {
     const row = familyTree.rows[rowIndex];
     if (!row) return null;
 
-    const member = { name: String(name ?? "").trim() || DEFAULT_MEMBER_NAME, photo };
+    const member = { name: String(name ?? "").trim() || DEFAULT_MEMBER_NAME, photo, is_self: false };
     row.members.push(member);
     await persistFamilyTree("add that family member");
     return member;
@@ -139,9 +145,12 @@ async function renameFamilyMember(rowIndex, memberIndex, name) {
     return member;
 }
 
+// You can't remove yourself from your own family tree -- the button isn't
+// drawn for that member, and this guard covers anything calling it directly.
 async function removeFamilyMember(rowIndex, memberIndex) {
     const row = familyTree.rows[rowIndex];
-    if (!row || !row.members[memberIndex]) return null;
+    const member = row?.members[memberIndex];
+    if (!member || member.is_self) return null;
 
     const [removed] = row.members.splice(memberIndex, 1);
     await persistFamilyTree("remove that family member");
@@ -158,6 +167,13 @@ async function addFamilyRow(members = [{ name: DEFAULT_MEMBER_NAME, photo: DEFAU
 // Removes the bottom row, like the old #removeRow handler did.
 async function removeFamilyRow() {
     if (familyTree.rows.length === 0) return null;
+
+    // Removing a row is a bulk action, so it can still take your own node with
+    // it -- but not silently.
+    const bottomRow = familyTree.rows[familyTree.rows.length - 1];
+    if (bottomRow.members.some((member) => member.is_self)) {
+        if (!confirm("The bottom row includes you. Remove it anyway?")) return null;
+    }
 
     const removed = familyTree.rows.pop();
     await persistFamilyTree("remove that row");
@@ -177,7 +193,11 @@ async function resetFamilyTree() {
 // clicking away (or pressing Enter) saves the new name.
 function createFamilyMemberEl(rowIndex, memberIndex, member) {
     const cell = document.createElement("div");
-    cell.className = `r${rowIndex + 1} c${memberIndex + 1}`;
+    cell.className = `familyMember r${rowIndex + 1} c${memberIndex + 1}`;
+    if (member.is_self) {
+        cell.classList.add("isSelf");
+        cell.dataset.self = "";
+    }
 
     const heading = document.createElement("h3");
 
@@ -185,6 +205,8 @@ function createFamilyMemberEl(rowIndex, memberIndex, member) {
     nameField.className = "familyMemberName";
     nameField.contentEditable = "true";
     nameField.spellcheck = false;
+    nameField.setAttribute("role", "textbox");
+    nameField.setAttribute("aria-label", `Name of family member ${memberIndex + 1}, row ${rowIndex + 1}`);
     nameField.textContent = member.name;
     nameField.addEventListener("blur", () => {
         renameFamilyMember(rowIndex, memberIndex, nameField.textContent);
@@ -202,6 +224,22 @@ function createFamilyMemberEl(rowIndex, memberIndex, member) {
 
     heading.append(nameField, photo);
     cell.append(heading);
+
+    // Everyone but you gets a remove button.
+    if (!member.is_self) {
+        const remove = document.createElement("button");
+        remove.className = "familyMemberRemove";
+        remove.type = "button";
+        remove.textContent = "×";
+        remove.title = `Remove ${member.name}`;
+        remove.setAttribute("aria-label", `Remove ${member.name}`);
+        remove.addEventListener("click", () => {
+            if (!confirm(`Remove ${member.name} from your family tree?`)) return;
+            removeFamilyMember(rowIndex, memberIndex);
+        });
+        cell.append(remove);
+    }
+
     return cell;
 }
 
@@ -225,6 +263,17 @@ function renderFamilyTree() {
     if (!familyTreeEl) return;
 
     familyTreeEl.innerHTML = "";
+    // Nothing to remove from an empty tree.
+    if (removeFamilyRowBtn) removeFamilyRowBtn.disabled = familyTree.rows.length === 0;
+
+    if (familyTree.rows.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "familyTreeEmpty";
+        empty.textContent = "Your family tree is empty. Add Row starts a new one, Reset Tree brings back the default.";
+        familyTreeEl.append(empty);
+        return;
+    }
+
     familyTree.rows.forEach((row, rowIndex) => {
         const rowEl = document.createElement("div");
         rowEl.className = `familyTreeRow R${rowIndex + 1}`;
@@ -252,6 +301,11 @@ async function initFamilyTree() {
     // Wired only once the tree is loaded, so an early click can't save over it.
     addFamilyRowBtn?.addEventListener("click", () => addFamilyRow());
     removeFamilyRowBtn?.addEventListener("click", () => removeFamilyRow());
+    resetFamilyTreeBtn?.addEventListener("click", () => {
+        // The only action that throws away a whole tree at once, so it asks.
+        if (!confirm("Replace your family tree with the default one? Everything in it now will be lost.")) return;
+        resetFamilyTree();
+    });
 }
 
 initFamilyTree();

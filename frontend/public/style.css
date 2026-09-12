@@ -204,6 +204,41 @@ main > section#selfSection img {
     margin: 0 auto;
     border-radius: 100%;
 }
+.familyMember {
+    position: relative;
+}
+/* Keeps a long name from running underneath the remove button. */
+.familyMember > h3 {
+    padding-right: 22px;
+}
+.familyMemberRemove {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    line-height: 1;
+    border: none;
+    border-radius: 100%;
+    background-color: #dfdfdf;
+    color: #444444;
+    cursor: pointer;
+}
+.familyMemberRemove:hover {
+    background-color: #ffbfbf;
+}
+.familyMemberRemove:active {
+    background-color: #ff9f9f;
+}
+.familyTreeEmpty {
+    grid-column: 1 / -1;
+    padding: 3vh 8vw;
+    text-align: center;
+    /* Near-black rather than a muted grey: this sits over the background
+       photo, where grey-on-bright fails contrast. */
+    color: #2b2b2b;
+}
 .familyTree ~ button {
     display: block;
     width: 20vw;
