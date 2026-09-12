@@ -31,7 +31,7 @@ function parseFamilyTree(body) {
     if (!Array.isArray(rows)) throw new ApiError(400, "Body must be { rows: [...] }");
     if (rows.length > MAX_ROWS) throw new ApiError(400, `A family tree can have at most ${MAX_ROWS} rows`);
 
-    return rows.map((row) => {
+    const parsed = rows.map((row) => {
         const members = row?.members;
         if (!Array.isArray(members)) throw new ApiError(400, "Each row must be { members: [...] }");
         if (members.length > MAX_MEMBERS_PER_ROW) {
@@ -43,20 +43,40 @@ function parseFamilyTree(body) {
             const photo = String(member?.photo ?? "").trim() || DEFAULT_MEMBER_PHOTO;
             if (name.length > MAX_NAME_LENGTH) throw new ApiError(400, "Name is too long");
             if (photo.length > MAX_PHOTO_LENGTH) throw new ApiError(400, "Photo is too long");
-            return { name, photo };
+            return { name, photo, is_self: Boolean(member?.is_self) };
         });
     });
+
+    // is_self marks the account holder's own node. Exactly one member can be
+    // "you", so a tree claiming several is rejected outright.
+    const selfCount = parsed.flat().filter((member) => member.is_self).length;
+    if (selfCount > 1) throw new ApiError(400, "Only one family member can be marked as you");
+
+    return parsed;
 }
 
+// `seeded` is how the page tells "never opened the Family tab" apart from
+// "deleted every row on purpose" -- both have no rows, but only the first
+// should get the starting layout.
 function getFamilyTree(userId) {
     const rows = db
         .prepare("SELECT row_id FROM family_rows WHERE user_id = ? ORDER BY position")
         .all(userId);
     const membersOf = db.prepare(
-        "SELECT name, photo FROM family_members WHERE row_id = ? ORDER BY position"
+        "SELECT name, photo, is_self FROM family_members WHERE row_id = ? ORDER BY position"
     );
+    const seeded = db.prepare("SELECT 1 FROM family_state WHERE user_id = ?").get(userId);
 
-    return { rows: rows.map((row) => ({ members: membersOf.all(row.row_id) })) };
+    return {
+        rows: rows.map((row) => ({
+            // SQLite has no boolean type, so is_self comes back as 0/1.
+            members: membersOf.all(row.row_id).map((member) => ({
+                ...member,
+                is_self: Boolean(member.is_self),
+            })),
+        })),
+        seeded: Boolean(seeded),
+    };
 }
 
 // Writes `tree` (already parsed) over whatever the user has now.
@@ -68,6 +88,9 @@ function saveFamilyTree(userId, tree) {
 
     db.exec("BEGIN");
     try {
+        // Any save marks the account as set up, an empty tree included.
+        db.prepare("INSERT OR IGNORE INTO family_state (user_id, seeded_at) VALUES (?, ?)").run(userId, now);
+
         tree.forEach((members, rowIndex) => {
             let rowId = existingRows[rowIndex]?.row_id;
             if (rowId === undefined) {
@@ -102,12 +125,12 @@ function saveRowMembers(rowId, members, now) {
         const memberId = existing[position]?.member_id;
         if (memberId === undefined) {
             db.prepare(
-                "INSERT INTO family_members (row_id, position, name, photo, created_at) VALUES (?, ?, ?, ?, ?)"
-            ).run(rowId, position, member.name, member.photo, now);
+                "INSERT INTO family_members (row_id, position, name, photo, is_self, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+            ).run(rowId, position, member.name, member.photo, Number(member.is_self), now);
         } else {
             db.prepare(
-                "UPDATE family_members SET position = ?, name = ?, photo = ? WHERE member_id = ?"
-            ).run(position, member.name, member.photo, memberId);
+                "UPDATE family_members SET position = ?, name = ?, photo = ?, is_self = ? WHERE member_id = ?"
+            ).run(position, member.name, member.photo, Number(member.is_self), memberId);
         }
     });
 
@@ -116,8 +139,9 @@ function saveRowMembers(rowId, members, now) {
     }
 }
 
-// A user who has never opened the Family tab gets { rows: [] }; the page then
-// seeds itself from the starter tree in index.html and saves that back.
+// A user who has never opened the Family tab gets { rows: [], seeded: false };
+// the page then seeds itself from the starter tree in index.html and saves
+// that back. Once seeded, an empty tree stays empty.
 router.get("/family", requireAuth, (req, res) => {
     res.json(getFamilyTree(req.user.id));
 });

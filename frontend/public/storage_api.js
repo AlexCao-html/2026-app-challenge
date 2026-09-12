@@ -1,6 +1,7 @@
-// Thin client for the accounts/conversations FastAPI service (../../database).
-// Every fetch() call against that API should go through here so token storage
-// and error handling stay in one place.
+// Thin client for the accounts/conversations API served by this same Express
+// app (../auth.js, ../conversations.js, ../family.js). Every fetch() call
+// against that API should go through here so token storage and error handling
+// stay in one place.
 
 const AUTH_TOKEN_KEY = "reellife_token";
 
@@ -25,7 +26,10 @@ class ApiError extends Error {
 async function parseErrorDetail(response) {
   try {
     const body = await response.json();
-    return body.detail ?? response.statusText;
+    // Express sends {error}; the old Python/FastAPI backend sent {detail}.
+    // Accept either, so the real reason reaches the user instead of a bare
+    // "Bad Request" from response.statusText.
+    return body.error ?? body.detail ?? response.statusText;
   } catch {
     return response.statusText;
   }

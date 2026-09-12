@@ -71,8 +71,46 @@ db.exec(`
         position INTEGER NOT NULL,
         name TEXT NOT NULL,
         photo TEXT,
+        is_self INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL
     )
+`);
+
+// is_self marks the account holder's own node ("Me"). It arrived after the
+// table did, so an existing app.db needs the column added rather than a
+// CREATE TABLE that SQLite will skip.
+const familyMemberColumns = db.prepare("PRAGMA table_info(family_members)").all();
+if (!familyMemberColumns.some((column) => column.name === "is_self")) {
+    db.exec("ALTER TABLE family_members ADD COLUMN is_self INTEGER NOT NULL DEFAULT 0");
+
+    // One-time: trees saved before the column existed have their "Me" node
+    // picked out by name -- the only clue available after the fact.
+    db.exec(`
+        UPDATE family_members SET is_self = 1 WHERE member_id IN (
+            SELECT MIN(m.member_id)
+            FROM family_members m
+            JOIN family_rows r ON r.row_id = m.row_id
+            WHERE m.name = 'Me'
+            GROUP BY r.user_id
+        )
+    `);
+}
+
+// Records that a user's tree has been set up, so the starting layout is only
+// ever applied to a genuinely new account. Without this, a user who deletes
+// every row looks identical to one who has never opened the tab, and the
+// default tree would come back and overwrite the deletion.
+db.exec(`
+    CREATE TABLE IF NOT EXISTS family_state (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        seeded_at TEXT NOT NULL
+    )
+`);
+
+// Anyone who already had a tree before family_state existed counts as seeded.
+db.exec(`
+    INSERT OR IGNORE INTO family_state (user_id, seeded_at)
+    SELECT DISTINCT user_id, created_at FROM family_rows
 `);
 
 module.exports = { db, DB_PATH };
