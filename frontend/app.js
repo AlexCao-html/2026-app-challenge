@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const { router: authRouter } = require('./auth');
 const { router: conversationsRouter } = require('./conversations');
+const { router: familyRouter } = require('./family');
 const { ApiError } = require('./errors');
 
 const app = express();
@@ -13,6 +14,7 @@ app.use(express.json());
 // Python/FastAPI version, which is kept around unused for reference).
 app.use(authRouter);
 app.use(conversationsRouter);
+app.use(familyRouter);
 
 // Serve static files from the "public" folder
 app.use(express.static(path.join(__dirname, 'public')));

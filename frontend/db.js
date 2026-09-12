@@ -52,4 +52,27 @@ db.exec(`
     )
 `);
 
+// The Family tab's tree, one set of rows per user. Kept normalized (rather
+// than one JSON blob per user) so per-member data -- a story, a real photo --
+// can hang off family_members later.
+db.exec(`
+    CREATE TABLE IF NOT EXISTS family_rows (
+        row_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        position INTEGER NOT NULL,
+        created_at TEXT NOT NULL
+    )
+`);
+
+db.exec(`
+    CREATE TABLE IF NOT EXISTS family_members (
+        member_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        row_id INTEGER NOT NULL REFERENCES family_rows(row_id) ON DELETE CASCADE,
+        position INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        photo TEXT,
+        created_at TEXT NOT NULL
+    )
+`);
+
 module.exports = { db, DB_PATH };

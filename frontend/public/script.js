@@ -123,24 +123,3 @@ function restoreLastPage() {
         document.body.classList.remove("restoringPage");
     }
 }
-
-var curRowCount = 3;
-$("#addRow").click(() => {
-    curRowCount++;
-    document.querySelector(".familyTree").innerHTML += `
-    <div class="familyTreeRow R${curRowCount}">
-        <div class="r3 c1">
-            <h3>Unnamed
-                <img src="profile.jpg" alt="profile" />
-            </h3>
-        </div>
-    </div>
-    <button class="familyTreeRowAddBtn AR${curRowCount}">Add</button>`;
-});
-$("#removeRow").click(() => {
-    curRowCount--;
-    document.querySelector(".familyTree").removeChild(document.querySelector(".familyTree").lastChild);
-    document.querySelector(".familyTree").removeChild(document.querySelector(".familyTree").lastChild);
-    document.querySelector(".familyTree").removeChild(document.querySelector(".familyTree").lastChild);
-    document.querySelector(".familyTree").removeChild(document.querySelector(".familyTree").lastChild);
-});

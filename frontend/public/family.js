@@ -1,14 +1,16 @@
 // "Family" tab: the family tree in index.html is rendered from -- and saved
-// back to -- a small data model in localStorage, so edits survive a reload.
-// The markup that ships in index.html is only a seed: it is read once on the
-// first visit and from then on the stored model is the source of truth.
+// back to -- the logged-in user's tree on the server (GET/PUT /family, see
+// ../family.js), so it follows the account rather than the browser and two
+// people on the same device never see each other's family.
 //
 // Shape of the model:
 //   { rows: [ { members: [ { name, photo } ] } ] }
 // Row 1 is the top of the tree (grandparents), each later row a generation
 // below it, matching the .familyTreeRow order in the markup.
+//
+// A user who has never opened this tab gets an empty tree back; the markup in
+// index.html is then used as their starting layout and saved to the server.
 
-const FAMILY_STORAGE_KEY = "reellife_family";
 const DEFAULT_MEMBER_PHOTO = "profile.jpg";
 const DEFAULT_MEMBER_NAME = "Unnamed";
 
@@ -20,8 +22,8 @@ let familyTree = { rows: [] };
 
 // ---- Storage ----
 
-// Reads whatever family members are already in the markup. Used as the seed
-// the first time this browser opens the app (and by resetFamilyTree()).
+// Reads whatever family members are in the markup. Used as the starting tree
+// for a new account (and by resetFamilyTree()).
 function readFamilyTreeFromDom() {
     const rowEls = familyTreeEl ? familyTreeEl.querySelectorAll(".familyTreeRow") : [];
     return {
@@ -39,8 +41,17 @@ function readFamilyTreeFromDom() {
     };
 }
 
-// Drops anything unexpected from a stored payload so a hand-edited or
-// out-of-date entry cannot break rendering.
+// The starting layout, captured now because the first render replaces the
+// markup it reads. normalizeFamilyTree() copies it, so callers can't scribble
+// on the original.
+const MARKUP_TREE = readFamilyTreeFromDom();
+
+function startingTree() {
+    return normalizeFamilyTree(MARKUP_TREE);
+}
+
+// Drops anything unexpected from a response so a surprising payload can't
+// break rendering.
 function normalizeFamilyTree(raw) {
     const rows = Array.isArray(raw?.rows) ? raw.rows : [];
     return {
@@ -53,46 +64,70 @@ function normalizeFamilyTree(raw) {
     };
 }
 
-function loadFamilyTree() {
-    try {
-        const saved = localStorage.getItem(FAMILY_STORAGE_KEY);
-        if (saved) return normalizeFamilyTree(JSON.parse(saved));
-    } catch (err) {
-        // Corrupt JSON or storage turned off -- fall back to the markup.
-    }
-    return readFamilyTreeFromDom();
+// Fetches this user's tree. A brand new account comes back with no rows, so
+// the markup's layout is saved as their starting point.
+async function loadFamilyTree() {
+    const stored = normalizeFamilyTree(await storageApi.getFamily());
+    if (stored.rows.length > 0) return stored;
+
+    return normalizeFamilyTree(await storageApi.saveFamily(startingTree()));
 }
 
-// Every mutating function below ends in a save, so this is the only place that
-// writes. Returns false when storage is unavailable (private mode, quota) --
-// the in-memory tree still updates, it just will not outlive the page.
+// Pulls the server's copy in and draws it.
+async function refreshFamilyTree() {
+    familyTree = await loadFamilyTree();
+    renderFamilyTree();
+    return familyTree;
+}
+
+// The only place that writes. Returns the server's copy of the tree.
 function saveFamilyTree() {
-    try {
-        localStorage.setItem(FAMILY_STORAGE_KEY, JSON.stringify(familyTree));
-        return true;
-    } catch (err) {
-        return false;
-    }
+    return storageApi.saveFamily(familyTree);
 }
 
 function getFamilyTree() {
     return familyTree;
 }
 
+function handleFamilyError(err, action) {
+    if (err?.status === 401) {
+        window.location.href = "login.html";
+        return;
+    }
+    alert(`Could not ${action}: ${err?.detail || err?.message || "unknown error"}`);
+}
+
+// Renders the change straight away, then saves it. If the save fails the
+// server's copy is pulled back in, so the page never keeps an edit the
+// account didn't actually get.
+async function persistFamilyTree(action) {
+    renderFamilyTree();
+    try {
+        familyTree = normalizeFamilyTree(await saveFamilyTree());
+    } catch (err) {
+        handleFamilyError(err, action);
+        try {
+            familyTree = normalizeFamilyTree(await storageApi.getFamily());
+        } catch (refetchErr) {
+            return;
+        }
+    }
+    renderFamilyTree();
+}
+
 // ---- Mutations (what the buttons and name fields call) ----
 
-function addFamilyMember(rowIndex, name, photo = DEFAULT_MEMBER_PHOTO) {
+async function addFamilyMember(rowIndex, name, photo = DEFAULT_MEMBER_PHOTO) {
     const row = familyTree.rows[rowIndex];
     if (!row) return null;
 
     const member = { name: String(name ?? "").trim() || DEFAULT_MEMBER_NAME, photo };
     row.members.push(member);
-    saveFamilyTree();
-    renderFamilyTree();
+    await persistFamilyTree("add that family member");
     return member;
 }
 
-function renameFamilyMember(rowIndex, memberIndex, name) {
+async function renameFamilyMember(rowIndex, memberIndex, name) {
     const member = familyTree.rows[rowIndex]?.members[memberIndex];
     if (!member) return null;
 
@@ -100,55 +135,46 @@ function renameFamilyMember(rowIndex, memberIndex, name) {
     if (trimmed === member.name) return member;
 
     member.name = trimmed;
-    saveFamilyTree();
-    renderFamilyTree();
+    await persistFamilyTree("save that name");
     return member;
 }
 
-function removeFamilyMember(rowIndex, memberIndex) {
+async function removeFamilyMember(rowIndex, memberIndex) {
     const row = familyTree.rows[rowIndex];
     if (!row || !row.members[memberIndex]) return null;
 
     const [removed] = row.members.splice(memberIndex, 1);
-    saveFamilyTree();
-    renderFamilyTree();
+    await persistFamilyTree("remove that family member");
     return removed;
 }
 
-function addFamilyRow(members = [{ name: DEFAULT_MEMBER_NAME, photo: DEFAULT_MEMBER_PHOTO }]) {
+async function addFamilyRow(members = [{ name: DEFAULT_MEMBER_NAME, photo: DEFAULT_MEMBER_PHOTO }]) {
     const row = normalizeFamilyTree({ rows: [{ members }] }).rows[0];
     familyTree.rows.push(row);
-    saveFamilyTree();
-    renderFamilyTree();
+    await persistFamilyTree("add that row");
     return row;
 }
 
 // Removes the bottom row, like the old #removeRow handler did.
-function removeFamilyRow() {
+async function removeFamilyRow() {
     if (familyTree.rows.length === 0) return null;
 
     const removed = familyTree.rows.pop();
-    saveFamilyTree();
-    renderFamilyTree();
+    await persistFamilyTree("remove that row");
     return removed;
 }
 
 // Throws away the saved tree and goes back to the markup's starting layout.
-function resetFamilyTree() {
-    try {
-        localStorage.removeItem(FAMILY_STORAGE_KEY);
-    } catch (err) {
-        // Nothing stored to clear.
-    }
-    familyTree = readFamilyTreeFromDom();
-    renderFamilyTree();
+async function resetFamilyTree() {
+    familyTree = startingTree();
+    await persistFamilyTree("reset the family tree");
     return familyTree;
 }
 
 // ---- Rendering ----
 
 // One family member. The name is an editable field: typing in it and then
-// clicking away (or pressing Enter) stores the new name.
+// clicking away (or pressing Enter) saves the new name.
 function createFamilyMemberEl(rowIndex, memberIndex, member) {
     const cell = document.createElement("div");
     cell.className = `r${rowIndex + 1} c${memberIndex + 1}`;
@@ -179,7 +205,7 @@ function createFamilyMemberEl(rowIndex, memberIndex, member) {
     return cell;
 }
 
-// The per-row "Add" button: asks for a name and stores a new member in that row.
+// The per-row "Add" button: asks for a name and saves a new member in that row.
 function createRowAddButton(rowIndex) {
     const button = document.createElement("button");
     button.className = `familyTreeRowAddBtn AR${rowIndex + 1}`;
@@ -211,19 +237,30 @@ function renderFamilyTree() {
 
 // ---- Wiring ----
 
-if (familyTreeEl) {
-    familyTree = loadFamilyTree();
-    renderFamilyTree();
+// Until this resolves the page shows the static markup from index.html, which
+// is the same layout a new account starts with.
+async function initFamilyTree() {
+    if (!familyTreeEl || !storageApi.isLoggedIn()) return;
 
+    try {
+        await refreshFamilyTree();
+    } catch (err) {
+        handleFamilyError(err, "load your family tree");
+        return;
+    }
+
+    // Wired only once the tree is loaded, so an early click can't save over it.
     addFamilyRowBtn?.addEventListener("click", () => addFamilyRow());
     removeFamilyRowBtn?.addEventListener("click", () => removeFamilyRow());
 }
+
+initFamilyTree();
 
 // Grouped for anything else that wants to read or change the tree (the story
 // tabs later on, or the console while debugging).
 const familyStore = {
     get: getFamilyTree,
-    load: loadFamilyTree,
+    refresh: refreshFamilyTree,
     save: saveFamilyTree,
     render: renderFamilyTree,
     addMember: addFamilyMember,

@@ -128,4 +128,15 @@ const storageApi = {
       },
     });
   },
+
+  // ---- Family tree ----
+  // Both return the caller's own tree: { rows: [ { members: [ { name, photo } ] } ] }.
+
+  getFamily() {
+    return apiFetch("/family");
+  },
+
+  saveFamily(tree) {
+    return apiFetch("/family", { method: "PUT", body: tree });
+  },
 };
