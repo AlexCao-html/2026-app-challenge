@@ -116,6 +116,11 @@ main > section {
     position: absolute;
     width: 100vw;
     min-height: calc(95vh - 10vh - 8vmin);
+    /* Clearance for the fixed footer (8vmin), plus a little air. `main` can't
+       reserve it -- the sections are absolutely positioned, so main computes to
+       zero height and its bottom margin does nothing -- which left anything at
+       the end of a tall section sitting underneath the nav bar. */
+    padding-bottom: 12vmin;
     transition: all 0.8s ease-in-out;
 }
 .inactive {
