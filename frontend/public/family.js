@@ -1,30 +1,51 @@
-// "Family" tab: the family tree in index.html is rendered from -- and saved
-// back to -- the logged-in user's tree on the server (GET/PUT /family, see
-// ../family.js), so it follows the account rather than the browser and two
-// people on the same device never see each other's family.
+// "Family" tab.
 //
-// Shape of the model:
-//   { rows: [ { members: [ { name, photo } ] } ] }
+// The tree in index.html is rendered from -- and saved back to -- the logged-in
+// user's tree on the server (GET/PUT /family, see ../family.js), so it follows
+// the account rather than the browser: two people on the same device never see
+// each other's family.
+//
+// The model mirrors the API payload exactly, so nothing has to be translated
+// between the two:
+//   { rows: [ { members: [ { name, photo, is_self } ] } ] }
 // Row 1 is the top of the tree (grandparents), each later row a generation
-// below it, matching the .familyTreeRow order in the markup.
+// below it, matching the .familyTreeRow order in the markup. is_self marks the
+// account holder's own node, which can't be removed individually.
 //
-// A user who has never opened this tab gets an empty tree back; the markup in
-// index.html is then used as their starting layout and saved to the server.
+// The markup in index.html is a placeholder shown until the fetch lands, and
+// doubles as the starting layout for an account that has never saved a tree.
 
 const DEFAULT_MEMBER_PHOTO = "profile.jpg";
 const DEFAULT_MEMBER_NAME = "Unnamed";
 
 const familyTreeEl = document.querySelector(".familyTree");
-const addFamilyRowBtn = document.querySelector("#addRow");
-const removeFamilyRowBtn = document.querySelector("#removeRow");
 const resetFamilyTreeBtn = document.querySelector("#resetTree");
 
+// What's on screen. Edits land here first and are saved immediately after.
 let familyTree = { rows: [] };
 
-// ---- Storage ----
+// The last tree the server confirmed. An edit is drawn before it's saved, so
+// this is what the page falls back to when a save can't be completed.
+let lastSavedTree = { rows: [] };
 
-// Reads whatever family members are in the markup. Used as the starting tree
-// for a new account (and by resetFamilyTree()).
+// ---- Model ----
+
+// Copies a tree and drops anything unexpected, so a surprising payload (or a
+// caller's object) can't break rendering or be mutated by accident.
+function normalizeFamilyTree(raw) {
+    const rows = Array.isArray(raw?.rows) ? raw.rows : [];
+    return {
+        rows: rows.map((row) => ({
+            members: (Array.isArray(row?.members) ? row.members : []).map((member) => ({
+                name: String(member?.name ?? "").trim() || DEFAULT_MEMBER_NAME,
+                photo: String(member?.photo ?? "").trim() || DEFAULT_MEMBER_PHOTO,
+                is_self: Boolean(member?.is_self),
+            })),
+        })),
+    };
+}
+
+// Reads the family members sitting in the markup.
 function readFamilyTreeFromDom() {
     const rowEls = familyTreeEl ? familyTreeEl.querySelectorAll(".familyTreeRow") : [];
     return {
@@ -44,33 +65,24 @@ function readFamilyTreeFromDom() {
     };
 }
 
-// The starting layout, captured now because the first render replaces the
-// markup it reads. normalizeFamilyTree() copies it, so callers can't scribble
-// on the original.
+// Captured now, at load, because the first render replaces the markup it reads
+// -- taken any later this would just return whatever is currently on screen,
+// and "reset" would reset to nothing.
 const MARKUP_TREE = readFamilyTreeFromDom();
 
 function startingTree() {
     return normalizeFamilyTree(MARKUP_TREE);
 }
 
-// Drops anything unexpected from a response so a surprising payload can't
-// break rendering.
-function normalizeFamilyTree(raw) {
-    const rows = Array.isArray(raw?.rows) ? raw.rows : [];
-    return {
-        rows: rows.map((row) => ({
-            members: (Array.isArray(row?.members) ? row.members : []).map((member) => ({
-                name: String(member?.name ?? "").trim() || DEFAULT_MEMBER_NAME,
-                photo: String(member?.photo ?? "").trim() || DEFAULT_MEMBER_PHOTO,
-                is_self: Boolean(member?.is_self),
-            })),
-        })),
-    };
+function getFamilyTree() {
+    return familyTree;
 }
 
-// Fetches this user's tree. Only an account that has never saved one gets the
-// markup's layout as a starting point -- a tree that was deliberately emptied
-// comes back with `seeded` set and is left alone.
+// ---- Server ----
+
+// Only an account that has never saved a tree gets the markup's layout as a
+// starting point. A tree that was deliberately emptied comes back with
+// `seeded` set, and is left empty.
 async function loadFamilyTree() {
     const payload = await storageApi.getFamily();
     const stored = normalizeFamilyTree(payload);
@@ -79,19 +91,16 @@ async function loadFamilyTree() {
     return normalizeFamilyTree(await storageApi.saveFamily(startingTree()));
 }
 
-// Pulls the server's copy in and draws it.
-async function refreshFamilyTree() {
-    familyTree = await loadFamilyTree();
-    renderFamilyTree();
-    return familyTree;
-}
-
 // The only place that writes. Returns the server's copy of the tree.
 function saveFamilyTree() {
     return storageApi.saveFamily(familyTree);
 }
 
-function getFamilyTree() {
+// Pulls the server's copy in and draws it.
+async function refreshFamilyTree() {
+    familyTree = await loadFamilyTree();
+    lastSavedTree = normalizeFamilyTree(familyTree);
+    renderFamilyTree();
     return familyTree;
 }
 
@@ -100,12 +109,19 @@ function handleFamilyError(err, action) {
         window.location.href = "login.html";
         return;
     }
-    alert(`Could not ${action}: ${err?.detail || err?.message || "unknown error"}`);
+
+    // fetch() rejects with a TypeError when it never reached the server at all
+    // -- "Failed to fetch" on its own doesn't say that, so spell it out.
+    const reason =
+        err instanceof TypeError
+            ? "the server isn't responding. Check that it's still running, then try again"
+            : err?.detail || err?.message || "unknown error";
+    alert(`Could not ${action}: ${reason}.`);
 }
 
-// Renders the change straight away, then saves it. If the save fails the
-// server's copy is pulled back in, so the page never keeps an edit the
-// account didn't actually get.
+// Draws the change straight away, then saves it. If the save fails the page is
+// put back to what the server actually holds, so a change that wasn't saved
+// never sits on screen looking like it was.
 async function persistFamilyTree(action) {
     renderFamilyTree();
     try {
@@ -115,13 +131,15 @@ async function persistFamilyTree(action) {
         try {
             familyTree = normalizeFamilyTree(await storageApi.getFamily());
         } catch (refetchErr) {
-            return;
+            // Can't reach the server to ask, so undo the change instead.
+            familyTree = normalizeFamilyTree(lastSavedTree);
         }
     }
+    lastSavedTree = normalizeFamilyTree(familyTree);
     renderFamilyTree();
 }
 
-// ---- Mutations (what the buttons and name fields call) ----
+// ---- Members ----
 
 async function addFamilyMember(rowIndex, name, photo = DEFAULT_MEMBER_PHOTO) {
     const row = familyTree.rows[rowIndex];
@@ -145,8 +163,8 @@ async function renameFamilyMember(rowIndex, memberIndex, name) {
     return member;
 }
 
-// You can't remove yourself from your own family tree -- the button isn't
-// drawn for that member, and this guard covers anything calling it directly.
+// You can't remove yourself from your own family tree. The button isn't drawn
+// for that member, and this guard covers anything calling it directly.
 async function removeFamilyMember(rowIndex, memberIndex) {
     const row = familyTree.rows[rowIndex];
     const member = row?.members[memberIndex];
@@ -157,27 +175,35 @@ async function removeFamilyMember(rowIndex, memberIndex) {
     return removed;
 }
 
-async function addFamilyRow(members = [{ name: DEFAULT_MEMBER_NAME, photo: DEFAULT_MEMBER_PHOTO }]) {
+// ---- Rows ----
+
+// Inserts a row at `index`, pushing the rows below it down. Index 0 puts it at
+// the top of the tree, familyTree.rows.length appends it at the bottom.
+async function insertFamilyRow(index, members = [{ name: DEFAULT_MEMBER_NAME, photo: DEFAULT_MEMBER_PHOTO }]) {
+    const position = Math.max(0, Math.min(index, familyTree.rows.length));
     const row = normalizeFamilyTree({ rows: [{ members }] }).rows[0];
-    familyTree.rows.push(row);
+    familyTree.rows.splice(position, 0, row);
     await persistFamilyTree("add that row");
     return row;
 }
 
-// Removes the bottom row, like the old #removeRow handler did.
-async function removeFamilyRow() {
-    if (familyTree.rows.length === 0) return null;
+async function removeFamilyRowAt(index) {
+    const row = familyTree.rows[index];
+    if (!row) return null;
 
-    // Removing a row is a bulk action, so it can still take your own node with
-    // it -- but not silently.
-    const bottomRow = familyTree.rows[familyTree.rows.length - 1];
-    if (bottomRow.members.some((member) => member.is_self)) {
-        if (!confirm("The bottom row includes you. Remove it anyway?")) return null;
-    }
-
-    const removed = familyTree.rows.pop();
+    const [removed] = familyTree.rows.splice(index, 1);
     await persistFamilyTree("remove that row");
     return removed;
+}
+
+// Appends at the bottom / removes the bottom row. The buttons work a row at a
+// time; these are the whole-tree shortcuts familyStore exposes.
+function addFamilyRow(members) {
+    return insertFamilyRow(familyTree.rows.length, members);
+}
+
+function removeFamilyRow() {
+    return removeFamilyRowAt(familyTree.rows.length - 1);
 }
 
 // Throws away the saved tree and goes back to the markup's starting layout.
@@ -189,8 +215,19 @@ async function resetFamilyTree() {
 
 // ---- Rendering ----
 
-// One family member. The name is an editable field: typing in it and then
-// clicking away (or pressing Enter) saves the new name.
+function createControlButton(className, label, description, onClick) {
+    const button = document.createElement("button");
+    button.className = className;
+    button.type = "button";
+    button.textContent = label;
+    button.title = description;
+    button.setAttribute("aria-label", description);
+    button.addEventListener("click", onClick);
+    return button;
+}
+
+// One family member: an editable name, a photo, and -- unless this is you -- a
+// button to remove them. The name saves on blur or Enter.
 function createFamilyMemberEl(rowIndex, memberIndex, member) {
     const cell = document.createElement("div");
     cell.className = `familyMember r${rowIndex + 1} c${memberIndex + 1}`;
@@ -225,52 +262,87 @@ function createFamilyMemberEl(rowIndex, memberIndex, member) {
     heading.append(nameField, photo);
     cell.append(heading);
 
-    // Everyone but you gets a remove button.
     if (!member.is_self) {
-        const remove = document.createElement("button");
-        remove.className = "familyMemberRemove";
-        remove.type = "button";
-        remove.textContent = "×";
-        remove.title = `Remove ${member.name}`;
-        remove.setAttribute("aria-label", `Remove ${member.name}`);
-        remove.addEventListener("click", () => {
-            if (!confirm(`Remove ${member.name} from your family tree?`)) return;
-            removeFamilyMember(rowIndex, memberIndex);
-        });
-        cell.append(remove);
+        cell.append(
+            createControlButton("familyMemberRemove", "×", `Remove ${member.name}`, () => {
+                if (!confirm(`Remove ${member.name} from your family tree?`)) return;
+                removeFamilyMember(rowIndex, memberIndex);
+            })
+        );
     }
 
     return cell;
 }
 
-// The per-row "Add" button: asks for a name and saves a new member in that row.
-function createRowAddButton(rowIndex) {
-    const button = document.createElement("button");
-    button.className = `familyTreeRowAddBtn AR${rowIndex + 1}`;
-    button.type = "button";
-    button.textContent = "Add";
-    button.addEventListener("click", () => {
-        const name = prompt("Who would you like to add to this row?");
-        if (name === null) return;
-        addFamilyMember(rowIndex, name);
-    });
-    return button;
+// Asks before dropping a whole row of people. An empty row goes without a
+// question; a row holding you says so explicitly.
+function confirmRowRemoval(row, rowIndex) {
+    if (row.members.some((member) => member.is_self)) {
+        return confirm(`Row ${rowIndex + 1} includes you. Remove it anyway?`);
+    }
+    if (row.members.length > 0) {
+        const count = row.members.length;
+        return confirm(`Remove row ${rowIndex + 1} and the ${count} ${count === 1 ? "person" : "people"} in it?`);
+    }
+    return true;
+}
+
+// The controls beside each row: add a member to it, add a new row above or
+// below it, or remove the row itself.
+function createRowControls(rowIndex, row) {
+    const controls = document.createElement("div");
+    controls.className = `familyRowControls CR${rowIndex + 1}`;
+    controls.setAttribute("role", "group");
+    controls.setAttribute("aria-label", `Row ${rowIndex + 1} controls`);
+
+    controls.append(
+        createControlButton(
+            `familyTreeRowAddBtn AR${rowIndex + 1}`,
+            "Add",
+            `Add a family member to row ${rowIndex + 1}`,
+            () => {
+                const name = prompt("Who would you like to add to this row?");
+                if (name === null) return;
+                addFamilyMember(rowIndex, name);
+            }
+        ),
+        createControlButton("familyRowAddAbove", "↑+", `Add a new row above row ${rowIndex + 1}`, () =>
+            insertFamilyRow(rowIndex)
+        ),
+        createControlButton("familyRowAddBelow", "↓+", `Add a new row below row ${rowIndex + 1}`, () =>
+            insertFamilyRow(rowIndex + 1)
+        ),
+        createControlButton("familyRowRemove", "×", `Remove row ${rowIndex + 1}`, () => {
+            if (!confirmRowRemoval(row, rowIndex)) return;
+            removeFamilyRowAt(rowIndex);
+        })
+    );
+
+    return controls;
+}
+
+// An empty tree has no rows to hang controls off, so it carries its own button
+// to start the first one.
+function renderEmptyFamilyTree() {
+    const message = document.createElement("p");
+    message.className = "familyTreeEmpty";
+    message.textContent = "Your family tree is empty.";
+
+    const addFirstRow = createControlButton("familyTreeEmptyAdd", "Add a row", "Add the first row", () =>
+        insertFamilyRow(0)
+    );
+
+    familyTreeEl.append(message, addFirstRow);
 }
 
 // Rebuilds the whole tree from the model. Cheap at this size, and it keeps the
-// row/column classes and the row-then-add-button ordering the CSS relies on.
+// row/column classes and the row-then-controls ordering the CSS relies on.
 function renderFamilyTree() {
     if (!familyTreeEl) return;
 
     familyTreeEl.innerHTML = "";
-    // Nothing to remove from an empty tree.
-    if (removeFamilyRowBtn) removeFamilyRowBtn.disabled = familyTree.rows.length === 0;
-
     if (familyTree.rows.length === 0) {
-        const empty = document.createElement("p");
-        empty.className = "familyTreeEmpty";
-        empty.textContent = "Your family tree is empty. Add Row starts a new one, Reset Tree brings back the default.";
-        familyTreeEl.append(empty);
+        renderEmptyFamilyTree();
         return;
     }
 
@@ -280,7 +352,7 @@ function renderFamilyTree() {
         row.members.forEach((member, memberIndex) => {
             rowEl.append(createFamilyMemberEl(rowIndex, memberIndex, member));
         });
-        familyTreeEl.append(rowEl, createRowAddButton(rowIndex));
+        familyTreeEl.append(rowEl, createRowControls(rowIndex, row));
     });
 }
 
@@ -298,9 +370,8 @@ async function initFamilyTree() {
         return;
     }
 
-    // Wired only once the tree is loaded, so an early click can't save over it.
-    addFamilyRowBtn?.addEventListener("click", () => addFamilyRow());
-    removeFamilyRowBtn?.addEventListener("click", () => removeFamilyRow());
+    // Wired only once the tree has loaded, so an early click can't save over it.
+    // The row buttons are wired as they render.
     resetFamilyTreeBtn?.addEventListener("click", () => {
         // The only action that throws away a whole tree at once, so it asks.
         if (!confirm("Replace your family tree with the default one? Everything in it now will be lost.")) return;
@@ -320,6 +391,8 @@ const familyStore = {
     addMember: addFamilyMember,
     renameMember: renameFamilyMember,
     removeMember: removeFamilyMember,
+    insertRow: insertFamilyRow,
+    removeRowAt: removeFamilyRowAt,
     addRow: addFamilyRow,
     removeRow: removeFamilyRow,
     reset: resetFamilyTree,
