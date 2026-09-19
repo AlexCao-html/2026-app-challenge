@@ -101,6 +101,10 @@
                                 Select a conversation, or start a new one.
                             </div>
                             <div id="testConversationPanel" class="testConversationPanel hidden">
+                                <div class="storyPublishBar">
+                                    <span id="storyPublishStatus" class="storyPublishStatus">Not published</span>
+                                    <button type="button" id="publishStoryBtn">Publish story</button>
+                                </div>
                                 <div id="testMessageList" class="message-list"></div>
                                 <form id="testMessageForm" class="message-form">
                                     <textarea id="testMessageInput" placeholder="Say something..." required></textarea>
@@ -112,69 +116,107 @@
                 </section>
                 <section id="friendsSection" class="inactive s4">
                     <h2>Friends</h2>
-                    <div class="friendsWrapper">
-                        <div class="friendStory">
-                            <img src="profile.jpg" />
-                            <h3>My Grandmother's Recipes</h3>
-                            <p class="tags">#Culture/Faith #Family</p>
-                            <p class="setting"><span class="place">Chicago</span> &bullet; <span class="time">1950s-Present</span></p>
-                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>
-                        </div>
-                        <div class="friendStory">
-                            <img src="profile.jpg" />
-                            <h3>Ellis Island Memories</h3>
-                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>
-                        </div>
-                        <div class="friendStory">
-                            <img src="profile.jpg" />
-                            <h3>Opening the Corner Store</h3>
-                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>
-                        </div>
-                        <div class="friendStory">
-                            <img src="profile.jpg" />
-                            <h3>Working the Frields in California</h3>
-                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>  
-                      </div>
+                    <div class="peoplePanel">
+                        <form id="friendSearchForm" class="friendSearchForm">
+                            <input id="friendSearchInput" type="search" placeholder="Find people by username" />
+                            <button type="submit">Search</button>
+                        </form>
+                        <ul id="friendSearchResults" class="peopleList"></ul>
+                        <p id="friendSearchEmpty" class="peopleEmpty hidden">No one by that name.</p>
+                        <details id="friendRequestsBlock">
+                            <summary>Friend requests <span id="friendRequestCount" class="countBadge">0</span></summary>
+                            <h4>Received</h4>
+                            <ul id="incomingRequests" class="peopleList"></ul>
+                            <p id="incomingRequestsEmpty" class="peopleEmpty">Nothing waiting on you.</p>
+                            <h4>Sent</h4>
+                            <ul id="outgoingRequests" class="peopleList"></ul>
+                            <p id="outgoingRequestsEmpty" class="peopleEmpty">You haven't asked anyone yet.</p>
+                        </details>
+                        <details id="friendListBlock">
+                            <summary>Your friends <span id="friendCount" class="countBadge">0</span></summary>
+                            <ul id="friendList" class="peopleList"></ul>
+                            <p id="friendListEmpty" class="peopleEmpty">No friends yet -- search for someone above.</p>
+                        </details>
                     </div>
+                    <h3>Stories from your friends</h3>
+                    <div class="friendsWrapper" id="friendStories"></div>
+                    <p id="friendStoriesEmpty" class="feedEmpty">
+                        Nothing here yet. Add some friends, and their stories shared with friends will show up here.
+                    </p>
                 </section>
                 <section id="communitySection" class="inactive s5">
                     <h2>Community</h2>
                     <h3>Featured</h3>
-                    <div id="featuredStory">
-                        <img src="guangzhou.jpg" />
-                        <h3 id="featuredTitle">Leaving Guangzhou at 18</h3>
-                        <p class="tags">#Culture/Faith #Family</p>
-                        <p class="setting"><span class="place">Chicago</span> &bullet; <span class="time">1950s-Present</span></p>
-                        <p class="summary">I still remember the smell of the ocean when we arrived... It was the beginning of a new life.</p>
-                        <p class="byAuthor">By <span class="featured author">Mei Lin</span></p>
-                    </div>
+                    <div id="featuredStory" class="hidden"></div>
+                    <p id="communityFeaturedEmpty" class="feedEmpty">
+                        No public stories yet. Publish one from the Story tab to get things started.
+                    </p>
                     <h3>Recent Stories</h3>
-                    <div class="otherStories">
-                        <div class="otherStory">
-                            <img src="profile.jpg" />
-                            <h3>My Grandmother's Recipes</h3>
-                            <p class="tags"><span class="tag">#Culture/Faith</span><span class="tag">#Family</span></p>
-                            <p class="setting"><span class="place">Chicago</span> &bullet; <span class="time">1950s-Present</span></p>
-                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>                        </div>
-                        <div class="otherStory">
-                            <img src="profile.jpg" />
-                            <h3>Ellis Island Memories</h3>
-                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>
-                        </div>
-                        <div class="otherStory">
-                            <img src="profile.jpg" />
-                            <h3>Opening the Corner Store</h3>
-                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>
-                        </div>
-                        <div class="otherStory">
-                            <img src="profile.jpg" />
-                            <h3>Working the Frields in California</h3>
-                            <p class="byAuthor">By <span class="author">Mei Lin</span></p>                        </div>
-                    </div>
+                    <div class="otherStories" id="communityStories"></div>
+                    <p id="communityStoriesEmpty" class="feedEmpty hidden">Nothing else published yet.</p>
                 </section>
                 <section id="testSection" class="inactive s6">
                 </section>
             </main>
+        </div>
+        <!-- Publish dialog (Story tab) and story reader (Friends/Community
+             tabs). Both live outside <main> on purpose: script.js treats every
+             "main > section" as a page to slide in and out. -->
+        <div id="publishModal" class="modalOverlay hidden">
+            <div class="modalCard">
+                <h3 id="publishModalTitle">Publish your story</h3>
+                <form id="publishForm" class="publishForm">
+                    <label>Title
+                        <input id="publishTitle" type="text" maxlength="120" required />
+                    </label>
+                    <label>Short summary
+                        <textarea id="publishSummary" maxlength="500" rows="2"
+                            placeholder="A line or two to draw people in"></textarea>
+                    </label>
+                    <div class="publishRow">
+                        <label>Place
+                            <input id="publishPlace" type="text" maxlength="100" placeholder="Chicago" />
+                        </label>
+                        <label>Time period
+                            <input id="publishTimePeriod" type="text" maxlength="100" placeholder="1950s-Present" />
+                        </label>
+                    </div>
+                    <label>Tags
+                        <input id="publishTags" type="text" placeholder="Family, Culture/Faith" />
+                    </label>
+                    <label>Who can read it
+                        <select id="publishVisibility">
+                            <option value="private">Only me</option>
+                            <option value="friends">My friends</option>
+                            <option value="public">Everyone (Community)</option>
+                        </select>
+                    </label>
+                    <label>Story text
+                        <textarea id="publishContent" class="publishContent" rows="8"></textarea>
+                    </label>
+                    <p id="publishError" class="publishError hidden"></p>
+                    <div class="modalActions">
+                        <button type="button" id="unpublishBtn" class="dangerButton hidden">Unpublish</button>
+                        <span class="modalSpacer"></span>
+                        <button type="button" id="publishCancelBtn">Cancel</button>
+                        <button type="submit" id="publishSubmitBtn">Publish</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="storyModal" class="modalOverlay hidden">
+            <div class="modalCard">
+                <h3 id="storyModalTitle"></h3>
+                <p id="storyModalByline" class="byAuthor"></p>
+                <p id="storyModalSetting" class="setting"></p>
+                <p id="storyModalTags" class="tags"></p>
+                <div id="storyModalContent" class="storyModalContent"></div>
+                <div class="modalActions">
+                    <span class="modalSpacer"></span>
+                    <button type="button" id="storyAddFriendBtn" class="hidden">Add friend</button>
+                    <button type="button" id="storyModalCloseBtn">Close</button>
+                </div>
+            </div>
         </div>
         <footer>
             <div class="button left" id="self">Me</div>
@@ -190,6 +232,8 @@
         <script type="text/javascript" src="profile.js"></script>
         <script type="text/javascript" src="family.js"></script>
         <script type="text/javascript" src="testChat.js"></script>
+        <script type="text/javascript" src="stories.js"></script>
+        <script type="text/javascript" src="friends.js"></script>
         <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
         <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
     </body>

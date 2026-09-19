@@ -1,8 +1,12 @@
-// "Test" tab: a conversation list (like ai-chat-ui's sidebar) backed by the
-// same storage_api.js used elsewhere, but the chat itself only accepts user
-// input -- each message gets a canned assistant reply generated locally (no
-// real AI is wired up), and both sides of the exchange are persisted as one
-// prompt via storageApi.addPrompt / storageApi.addResponse.
+// "Tell Your Story" tab: a conversation list (like ai-chat-ui's sidebar)
+// backed by the same storage_api.js used elsewhere, but the chat itself only
+// accepts user input -- each message gets a canned assistant reply generated
+// locally (no real AI is wired up), and both sides of the exchange are
+// persisted as one prompt via storageApi.addPrompt / storageApi.addResponse.
+//
+// Publishing a conversation as a story lives in stories.js, which owns the
+// publish bar above the message list; this file just tells it which
+// conversation is selected (refreshPublishStatus).
 
 const testState = {
     conversations: [],
@@ -81,6 +85,7 @@ async function selectTestConversation(conversationId) {
     } catch (err) {
         renderTestMessages([]);
     }
+    refreshPublishStatus(conversationId);
 }
 
 newTestConversationBtn.addEventListener("click", async () => {

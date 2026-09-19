@@ -58,6 +58,10 @@ async function apiFetch(path, { method = "GET", body, auth = true } = {}) {
     throw new ApiError(response.status, await parseErrorDetail(response));
   }
 
+  // 204 is "nothing here" rather than an error -- GET /conversations/{id}/story
+  // uses it for a conversation nobody has published yet.
+  if (response.status === 204) return null;
+
   return response.json();
 }
 
@@ -142,5 +146,87 @@ const storageApi = {
 
   saveFamily(tree) {
     return apiFetch("/family", { method: "PUT", body: tree });
+  },
+
+  // ---- Stories ----
+  // publishStory both creates and updates: publishing a conversation that's
+  // already been published edits its existing story (see ../stories.js).
+
+  publishStory({ conversationId, title, summary, content, tags, place, timePeriod, photo, visibility } = {}) {
+    return apiFetch("/stories", {
+      method: "POST",
+      body: {
+        conversation_id: conversationId ?? null,
+        title,
+        summary: summary ?? "",
+        content: content ?? "",
+        tags: tags ?? [],
+        place: place ?? "",
+        time_period: timePeriod ?? "",
+        photo: photo ?? "",
+        visibility: visibility ?? "private",
+      },
+    });
+  },
+
+  // Feed cards carry no `content`; getStory() fetches the full text.
+  listMyStories() {
+    return apiFetch("/stories/mine");
+  },
+
+  listFriendStories() {
+    return apiFetch("/stories/friends");
+  },
+
+  listCommunityStories() {
+    return apiFetch("/stories/community");
+  },
+
+  getStory(storyId) {
+    return apiFetch(`/stories/${storyId}`);
+  },
+
+  // null when this conversation hasn't been published.
+  getConversationStory(conversationId) {
+    return apiFetch(`/conversations/${conversationId}/story`);
+  },
+
+  updateStory(storyId, changes) {
+    return apiFetch(`/stories/${storyId}`, { method: "PATCH", body: changes });
+  },
+
+  deleteStory(storyId) {
+    return apiFetch(`/stories/${storyId}`, { method: "DELETE" });
+  },
+
+  // ---- Friends ----
+
+  listFriends() {
+    return apiFetch("/friends");
+  },
+
+  listFriendRequests() {
+    return apiFetch("/friends/requests");
+  },
+
+  searchUsers(query) {
+    return apiFetch(`/users/search?q=${encodeURIComponent(query)}`);
+  },
+
+  sendFriendRequest(username) {
+    return apiFetch("/friends/requests", { method: "POST", body: { username } });
+  },
+
+  acceptFriendRequest(friendshipId) {
+    return apiFetch(`/friends/requests/${friendshipId}/accept`, { method: "POST" });
+  },
+
+  declineFriendRequest(friendshipId) {
+    return apiFetch(`/friends/requests/${friendshipId}/decline`, { method: "POST" });
+  },
+
+  // Also how a sender cancels a request they sent: either end removes the link.
+  removeFriend(userId) {
+    return apiFetch(`/friends/${userId}`, { method: "DELETE" });
   },
 };

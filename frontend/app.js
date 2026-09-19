@@ -3,6 +3,8 @@ const path = require('path');
 const { router: authRouter } = require('./auth');
 const { router: conversationsRouter } = require('./conversations');
 const { router: familyRouter } = require('./family');
+const { router: friendsRouter } = require('./friends');
+const { router: storiesRouter } = require('./stories');
 const { ApiError } = require('./errors');
 
 const app = express();
@@ -15,6 +17,8 @@ app.use(express.json());
 app.use(authRouter);
 app.use(conversationsRouter);
 app.use(familyRouter);
+app.use(friendsRouter);
+app.use(storiesRouter);
 
 // Serve static files from the "public" folder
 app.use(express.static(path.join(__dirname, 'public')));

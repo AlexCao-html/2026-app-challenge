@@ -471,3 +471,216 @@ body.restoringPage main {
 body.restoringPage main > section {
     transition: none;
 }
+
+/* ---- Publishing a story (Story tab) ---- */
+.storyPublishBar {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    padding: 1vh 2vw 0;
+}
+.storyPublishStatus {
+    flex: 1;
+    font-size: 0.9em;
+    color: #888888;
+}
+.storyPublishStatus.published {
+    color: #2b7a2b;
+    font-weight: 700;
+}
+#publishStoryBtn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 10px;
+    background-color: #bfffbf;
+    cursor: pointer;
+}
+#publishStoryBtn:hover {
+    background-color: #a0ffa0;
+}
+
+/* ---- Dialogs (publish form, story reader) ---- */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    /* Above the footer (z-index 999), which is fixed to the bottom of the
+       viewport and would otherwise sit on top of the dialog's buttons. */
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5vh 5vw;
+    background-color: #00000066;
+    backdrop-filter: blur(3px);
+}
+.modalOverlay.hidden {
+    display: none;
+}
+.modalCard {
+    width: min(600px, 100%);
+    max-height: 100%;
+    overflow-y: auto;
+    padding: 3vmin;
+    border-radius: 30px;
+    background-color: #ffffffee;
+    box-shadow: 1px 5px 8px 5px #00000033;
+}
+.publishForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5vh;
+}
+.publishForm label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.9em;
+}
+.publishForm input,
+.publishForm select,
+.publishForm textarea {
+    padding: 10px;
+    border: 1px solid #cccccc;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1em;
+}
+.publishForm textarea {
+    resize: vertical;
+}
+.publishContent {
+    min-height: 15vh;
+}
+.publishRow {
+    display: flex;
+    gap: 1vw;
+}
+.publishRow label {
+    flex: 1;
+}
+.publishError {
+    color: #aa2222;
+}
+.modalActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 1vh;
+}
+.modalSpacer {
+    flex: 1;
+}
+.modalActions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background-color: #dfdfdf;
+    cursor: pointer;
+}
+.modalActions button[type="submit"],
+.modalActions .primaryButton {
+    background-color: #bfffbf;
+}
+.modalActions button:hover {
+    filter: brightness(0.95);
+}
+.dangerButton {
+    background-color: #ffcfcf;
+}
+.storyModalContent {
+    max-height: 45vh;
+    overflow-y: auto;
+    margin: 2vh 0;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
+.storyModalContent p {
+    margin-bottom: 1vh;
+}
+
+/* ---- Friends tab: people panel ---- */
+.peoplePanel {
+    margin: 0 5vw 3vh;
+    padding: 2vmin;
+    border-radius: 30px;
+    background-color: #ffffff44;
+    backdrop-filter: blur(10px);
+}
+.friendSearchForm {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1vh;
+}
+.friendSearchForm input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #cccccc;
+    border-radius: 10px;
+    font-family: inherit;
+}
+.friendSearchForm button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background-color: #bfffbf;
+    cursor: pointer;
+}
+.peoplePanel summary {
+    cursor: pointer;
+    padding: 5px 0;
+    font-weight: 700;
+}
+.peoplePanel h4 {
+    margin-top: 1vh;
+}
+.peopleList {
+    list-style: none;
+}
+.personRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #ffffff88;
+}
+.personName {
+    flex: 1;
+    font-weight: 700;
+}
+.personNote {
+    font-size: 0.85em;
+    color: #666666;
+}
+.personRow button {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 10px;
+    background-color: #dfdfdf;
+    cursor: pointer;
+}
+.personRow .primaryButton {
+    background-color: #bfffbf;
+}
+.personRow button:hover {
+    filter: brightness(0.95);
+}
+.countBadge {
+    padding: 2px 10px;
+    border-radius: 40px;
+    background-color: #bfffbf;
+    font-size: 0.85em;
+}
+.peopleEmpty {
+    padding: 5px 0;
+    color: #666666;
+    font-size: 0.9em;
+}
+.peopleEmpty.hidden,
+.feedEmpty.hidden {
+    display: none;
+}
+.feedEmpty {
+    padding: 2vh 5vw;
+    color: #555555;
+    text-align: center;
+}

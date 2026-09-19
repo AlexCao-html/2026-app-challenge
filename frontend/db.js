@@ -113,4 +113,65 @@ db.exec(`
     SELECT DISTINCT user_id, created_at FROM family_rows
 `);
 
+// Published stories. A story is a snapshot of a "Tell Your Story" conversation
+// -- its text is copied into `content` at publish time rather than read back
+// out of the transcript file, so editing the conversation afterwards doesn't
+// silently rewrite what other people already saw. Re-publishing the same
+// conversation updates its story (see the unique index below) instead of
+// piling up duplicates in everyone's feed.
+//
+// visibility drives the Friends and Community tabs:
+//   'private'  -- only the author sees it
+//   'friends'  -- the author and their accepted friends (Friends tab)
+//   'public'   -- everyone (Friends tab for friends, Community tab for all)
+db.exec(`
+    CREATE TABLE IF NOT EXISTS stories (
+        story_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        conversation_id INTEGER REFERENCES conversation(conversation_id),
+        title TEXT NOT NULL,
+        summary TEXT NOT NULL DEFAULT '',
+        content TEXT NOT NULL,
+        tags TEXT NOT NULL DEFAULT '',
+        place TEXT NOT NULL DEFAULT '',
+        time_period TEXT NOT NULL DEFAULT '',
+        photo TEXT NOT NULL DEFAULT 'profile.jpg',
+        visibility TEXT NOT NULL DEFAULT 'private',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    )
+`);
+
+// One story per conversation, so publishing twice edits the existing story.
+// Partial index: stories detached from a conversation don't collide on NULL.
+db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS stories_conversation_unique
+    ON stories (conversation_id) WHERE conversation_id IS NOT NULL
+`);
+
+// The feed queries filter by visibility and then by author, so lead with it.
+db.exec("CREATE INDEX IF NOT EXISTS stories_visibility ON stories (visibility, user_id)");
+
+// Friend graph. One row per request, in the direction it was sent; a
+// friendship is that row once status flips to 'accepted', which is why every
+// "are these two friends" check has to look at both directions. Declining
+// deletes the row rather than storing a 'declined' state -- it keeps the
+// uniqueness rule simple and lets the pair try again later.
+db.exec(`
+    CREATE TABLE IF NOT EXISTS friendships (
+        friendship_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        requester_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        addressee_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TEXT NOT NULL,
+        responded_at TEXT,
+        UNIQUE (requester_id, addressee_id),
+        CHECK (requester_id <> addressee_id)
+    )
+`);
+
+// Incoming requests ("who wants to be my friend") are looked up by addressee,
+// which the UNIQUE(requester_id, addressee_id) index above can't serve.
+db.exec("CREATE INDEX IF NOT EXISTS friendships_addressee ON friendships (addressee_id, status)");
+
 module.exports = { db, DB_PATH };

@@ -32,11 +32,14 @@ app.js            Express app: JSON body parsing, static files, the two
                    routers below, error-handling middleware
 auth.js           /signup /login /logout /whoami + the requireAuth middleware
 conversations.js  /conversations, /prompts
+friends.js        /friends, /users/search -- the friend graph
+stories.js        /stories -- publishing a conversation for others to read
 db.js             node:sqlite connection + schema (CREATE TABLE IF NOT EXISTS)
 security.js       password hashing + session token helpers
 storage.js        transcript/media file helpers
 errors.js         ApiError(status, message)
-test/             node --test suite (auth.test.js, conversations.test.js)
+test/             node --test suite (auth, conversations, family, friends,
+                   stories)
 public/           static frontend (see below)
 ```
 
@@ -96,6 +99,53 @@ All endpoints below (except `/signup`, `/login`) require
   "output_media_base64"?, "cost"?}` -> `200 {"ok": true}` (adds `cost` to the
   conversation's running total)
 
+### Stories
+
+A story is a published snapshot of a conversation: its text is copied into
+`stories.content` when it's published, so later messages don't rewrite what
+people have already read, and the conversation it came from is left alone.
+`visibility` is `private` (author only), `friends` (author + accepted
+friends, the Friends tab) or `public` (everyone, the Community tab).
+
+- `POST /stories` -- `{"conversation_id", "title", "summary"?, "content"?,
+  "tags"?, "place"?, "time_period"?, "photo"?, "visibility"?}` ->
+  `201` with the story. `content` defaults to the author's own messages in
+  that conversation (the assistant's replies are interview prompts, not the
+  story). Publishing the same conversation again edits its story and returns
+  `200` -- there's one story per conversation.
+- `GET /stories/mine` -- the caller's own stories, newest first
+- `GET /stories/friends` -- friends' stories with visibility `friends` or
+  `public` (not the caller's own)
+- `GET /stories/community` -- every `public` story, newest first, the
+  caller's own included
+- `GET /stories/{id}` -- one story with its `content`, plus `is_author` and
+  `author_is_friend`; 404 if the caller isn't allowed to read it
+- `PATCH /stories/{id}` -- edit any subset of the fields above (this is how
+  visibility gets changed); author only
+- `DELETE /stories/{id}` -- unpublish; the conversation is untouched and can
+  be published again
+- `GET /conversations/{id}/story` -- the story that conversation was
+  published as (with `content`), or `204` if it hasn't been
+
+Feed endpoints leave `content` out -- cards only need the title and summary,
+so the full text is fetched per story.
+
+### Friends
+
+One row per request, in the direction it was sent, flipped to `accepted` when
+the other side agrees. Declining deletes the row, so the pair can try again.
+
+- `GET /users/search?q=` -- usernames containing `q` (never the caller, never
+  anyone's email), each with `relationship`: `none`, `request_sent`,
+  `request_received` or `friends`
+- `GET /friends` -- accepted friends
+- `GET /friends/requests` -- `{"incoming": [...], "outgoing": [...]}`, both
+  still pending
+- `POST /friends/requests` -- `{"username"}` -> `201` pending. Asking someone
+  who already asked you accepts their request instead (`200`).
+- `POST /friends/requests/{id}/accept` / `.../decline` -- addressee only
+- `DELETE /friends/{userId}` -- unfriend, or cancel a request you sent
+
 ## Frontend pages
 
 - `public/config.js` -- `API_BASE_URL` (empty string; same-origin now)
@@ -104,6 +154,10 @@ All endpoints below (except `/signup`, `/login`) require
 - `public/login.html` + `loginScript.js` -- login/signup form
 - `public/index.html` + `profile.js` -- profile page, guarded behind a valid
   session
-- `public/index.html`'s "Test" tab + `testChat.js` -- a conversation list +
+- `public/index.html`'s "Story" tab + `testChat.js` -- a conversation list +
   chat UI exercising `/conversations` and `/prompts`; user-only input, with a
   canned (not real-AI) assistant reply generated and persisted per message
+- `public/stories.js` -- the publish dialog above that chat, the story reader,
+  and the Friends/Community feeds, all rendered from `/stories`
+- `public/friends.js` -- the Friends tab's people panel (search, requests,
+  friend list) on top of `/friends`
