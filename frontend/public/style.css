@@ -16,7 +16,7 @@
    also forced overflow-y to compute to `auto` on every element, which is what
    grew a scrollbar inside the header. */
 html, body {
-    overflow-x: hidden;
+    overflow-x: hidden !important;
 }
 h1 {
     font-family: "Crafty Girls", cursive;
@@ -488,7 +488,7 @@ main > section#selfSection img {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-image: url('bg2.jpg');
+    background-image: url('Background Image.png');
     background-size: cover;
     background-position: center;
     z-index: -100;
@@ -715,12 +715,12 @@ body.restoringPage main > section {
     color: #666666;
     font-size: 0.9em;
 }
-.peopleEmpty.hidden,
-.feedEmpty.hidden {
-    display: none;
-}
 .feedEmpty {
     padding: 2vh 5vw;
     color: #555555;
     text-align: center;
+}
+#storyImageUpload {
+    display: block;
+    margin: 1vh auto 0;
 }

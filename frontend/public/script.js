@@ -23,6 +23,8 @@ const PAGE_SECTIONS = {
     test: "#testSection",
 };
 
+$("#storyImageUpload").css("height", $("#storyImageUpload").width + "px");
+
 // ---- Cookie helpers ----
 
 function readCookie(name) {

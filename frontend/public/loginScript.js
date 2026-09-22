@@ -68,6 +68,6 @@ toggleModeLink.addEventListener("click", (event) => {
     formTitle.textContent = mode === "signup" ? "Sign Up" : "Login";
     signInButton.textContent = mode === "signup" ? "Sign Up" : "Sign In";
     toggleModeLink.textContent =
-        mode === "signup" ? "Already have an account? Log in" : "Don't have an account? Sign up";
+        mode === "signup" ? "LOG IN" : "SIGN UP";
     setError("");
 });
