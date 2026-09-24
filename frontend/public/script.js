@@ -20,7 +20,6 @@ const PAGE_SECTIONS = {
     story: "#tellYourStorySection",
     friends: "#friendsSection",
     community: "#communitySection",
-    test: "#testSection",
 };
 
 $("#storyImageUpload").css("height", $("#storyImageUpload").width + "px");

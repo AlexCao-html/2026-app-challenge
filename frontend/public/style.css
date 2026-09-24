@@ -11,91 +11,80 @@
     font-family: Lato, sans-serif;
     font-weight: 400;
 }
-/* Only the page itself should suppress sideways scrolling (the off-screen
-   .inactive sections would otherwise widen it). Putting overflow-x on `*`
-   also forced overflow-y to compute to `auto` on every element, which is what
-   grew a scrollbar inside the header. */
 html, body {
     overflow-x: hidden !important;
 }
-h1 {
-    font-family: "Crafty Girls", cursive;
-    font-weight: 400;
-}
-h2 {
-    font-weight: 700;
-}
-.inactive.none {
-    display: none;
+main:has(#selfSection.active) ~ header #self, main:has(#familySection.active) ~ header #family, main:has(#tellYourStorySection.active) ~ header #story, main:has(#friendsSection.active) ~ header #friends, main:has(#communitySection.active) ~ header #community {
+    font-weight: 900;
 }
 .wrapper {
     display: grid;
-    grid-template-rows: 8vh 1fr;
+    grid-template-columns: 20vw 80vw;
+    grid-template-rows: 100vh;
 }
-footer {
-    position: fixed;
-    bottom: 0;
-    height: 8vmin;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    z-index: 999;
-    width: 60vw;
-    left: 20vw;
-}
-footer > .button {
-    background-color: #88888866;
-    display: grid;
-    place-items: center;
-    border: 1px solid #ffffff88;
-    color: #ffffff;
-    backdrop-filter: blur(2px);
-    font-size: clamp(10px, 1.5vw, 16pt);
-    cursor: pointer;
-}
-footer > .button:hover {
-    background-color: #88888888;
-    backdrop-filter: blur(4px);
-}
-footer > .button:active {
-    background-color: #88888899;
-    backdrop-filter: blur(6px);
-}
-.left.button {
-    border-radius: 50px 0 0 0;
-}
-.right.button {
-    border-radius: 0 50px 0 0;
+.selfBackground {
+    position: absolute;
+    right: 0;
+    top: 20vh;
+    width: 80vw;
+    height: 80vh;
+    z-index: -999;
+    background-image: linear-gradient(135deg, #98d7ff, #f4f1ec 20%, #f4f1ec 50%,#f87964);
 }
 header {
-    height: 8vh;
-    position: relative;
+    height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 0 2vw;
+    justify-content: space-between;
     backdrop-filter: blur(10px);
-    background-color: #ffffff66;
+    background-color: #f4f1ec;
+    padding-bottom: 5vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999;
 }
 header h1 {
-    /* Scales with the bar's height so the title can't outgrow it on a short
-       window, and with the width so it can't run into the buttons on a narrow
-       one. Unchanged (32px) at desktop sizes. */
-    font-size: clamp(18px, min(4.5vh, 6vw), 32px);
-    line-height: 1.2;
+    color: #00000000;
+    background-image: url("ReelLife\ Logo.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    height: 3em;
+    text-align: center;
+    cursor: default;
+    user-select: none;
+}
+nav {
+    font-size: 1.2em;
+    width: 20vw;
+}
+nav .button {
+    margin: 1em 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+nav .button:not(nav .button:last-of-type) {
+    margin-bottom: 5vh;
+}
+nav .button img {
+    margin: 0 1em;
+}
+#familySection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 3vh;
 }
 /* Taken out of the flow so the title stays centred on the page rather than on
    whatever space the buttons leave behind. */
-.headerActions {
-    position: absolute;
-    right: 2vw;
-    display: flex;
-    gap: 1vw;
-}
-.headerActions button {
+#headerLogoutButton {
     padding: 0.9vh 1.2vw;
     border: 1px solid #ffffff88;
     border-radius: 40px;
-    background-color: #ffffff88;
+    background-color: #ffbfbfaa;
     backdrop-filter: blur(4px);
     color: #333333;
     font-size: clamp(9px, 1.1vw, 13px);
@@ -103,18 +92,15 @@ header h1 {
     cursor: pointer;
     transition: background-color 0.2s ease-in-out;
 }
-.headerActions button:hover {
-    background-color: #ffffffcc;
-}
-#headerLogoutButton {
-    background-color: #ffbfbfaa;
-}
 #headerLogoutButton:hover {
     background-color: #ffa0a0;
 }
+#headerLogoutButton:active {
+    background-color: #ff9090;
+}
 main > section {
     position: absolute;
-    width: 100vw;
+    width: 80vw;
     min-height: calc(95vh - 10vh - 8vmin);
     /* Clearance for the fixed footer (8vmin), plus a little air. `main` can't
        reserve it -- the sections are absolutely positioned, so main computes to
@@ -124,12 +110,12 @@ main > section {
     transition: all 0.8s ease-in-out;
 }
 .inactive {
-    left: -50vw;
+    left: -30vw;
     opacity: 0;
     
 }
 .active {
-    left: 0;
+    left: 20vw;
     opacity: 1;
     z-index: 100;
 }
@@ -141,10 +127,19 @@ main > section h2, main > section h3 {
 }
 main > section#selfSection img {
     display: block;
-    margin: 0 auto;
+    margin-left: 10vw;
+    position: absolute;
+    top: 8vh;
     border-radius: 100%;
-    height: 10vmin;
-    width: 10vmin;
+    height: 20vw;
+    width: 20vw;
+}
+main > section#selfSection h2 {
+    font-size: 3em;
+    font-weight: 600;
+}
+#familySection > img {
+    height: 5vh
 }
 #logoutButton {
     display: block;
@@ -165,6 +160,20 @@ main > section#selfSection img {
        first column matters: a plain 1fr won't shrink past its content, so a
        crowded row would push the controls off the side of the screen. */
     grid-template-columns: minmax(0, 1fr) minmax(44px, 10vw);
+}
+.familyBackground {
+    position: absolute;
+    z-index: -999;
+    width: 80vw;
+    height: 90vh;
+    top: 10vh;
+    right: 0;
+    background-image: linear-gradient(45deg, #98d7ff, #f4f1ec 20%, #f4f1ec 50%,#f87964);
+}
+.treeContainer {
+    position: absolute;
+    width: 80vw;
+    top: 10vh;
 }
 .familyTreeRow {
     display: flex;
@@ -229,6 +238,11 @@ main > section#selfSection img {
 .familyMember > h3 {
     padding-right: 22px;
 }
+#familySection > h3 {
+    font-style: italic;
+    color: #5e180c;
+    font-size: min(1.2em, 1.5vh);
+}
 .familyMemberRemove {
     position: absolute;
     top: 0;
@@ -281,7 +295,18 @@ main > section#selfSection img {
     width: 20vw;
     height: 5vh;
     margin: 0 auto;
-
+    margin-top: 5vh;
+    border-radius: 2em;
+    border: none;
+    background-color: #2b2b2b;
+    color: #ffffff;
+    cursor: pointer;
+}
+.familyTree ~ button:hover {
+    background-color: #3b3b3b;
+}
+.familyTree ~ button:active {
+    background-color: #4b4b4b;
 }
 .friendsWrapper, .otherStories {
     display: grid;
