@@ -32,6 +32,9 @@ app.js            Express app: JSON body parsing, static files, the two
                    routers below, error-handling middleware
 auth.js           /signup /login /logout /whoami + the requireAuth middleware
 conversations.js  /conversations, /prompts
+interview.js      /conversations/{id}/interview/* -- the Story tab's interview
+interviewer.js    what the interviewer says: Claude on AWS Bedrock, or canned
+                   questions when that isn't switched on
 friends.js        /friends, /users/search -- the friend graph
 stories.js        /stories -- publishing a conversation for others to read
 db.js             node:sqlite connection + schema (CREATE TABLE IF NOT EXISTS)
@@ -56,7 +59,8 @@ npm start
 ```
 
 Runs on http://localhost:6767 by default (`PORT` env var to change it).
-Tables are created automatically on startup -- no migration step.
+Tables are created automatically on startup -- no migration step. Settings
+can also go in `frontend/.env` (see `.env.example`), which `npm start` reads.
 
 ### Configuration (env vars)
 
@@ -65,6 +69,38 @@ Tables are created automatically on startup -- no migration step.
 | `PORT` | `6767` | Port the Express app listens on |
 | `DATABASE_PATH` | `./app.db` | SQLite file path |
 | `MEDIA_ROOT` | `./conversation_files` | Where transcripts/media attachments are written |
+| `INTERVIEW_AI` | *(unset)* | `bedrock` to have Claude run the Story tab's interview; anything else uses canned questions |
+| `INTERVIEW_MODEL` | `anthropic.claude-opus-5` | Bedrock model ID for the interviewer |
+| `AWS_REGION` | -- | Bedrock region, e.g. `us-east-1` (only with `INTERVIEW_AI=bedrock`) |
+
+### Turning on the AI interviewer
+
+The interview came over from the ReelLife repo (`src/server/server.js`,
+`src/js/interview.js`), which called Claude through AWS Bedrock. It still
+does, via Anthropic's `@anthropic-ai/bedrock-sdk`, but only when switched on
+-- otherwise the interviewer asks from a short canned list and "Write my
+story" just gathers your answers, so the app runs for anyone without AWS
+access.
+
+To switch it on for every `npm start`, do this once:
+
+```bash
+cd frontend
+cp .env.example .env
+```
+
+then open `.env` and fill in one of the AWS credential options (or leave them
+out to use a profile from `aws configure`). `app.js` loads `.env` on startup,
+and the log says which interviewer is running:
+
+```
+Interview AI: Claude (anthropic.claude-opus-5) on AWS Bedrock in us-east-1
+```
+
+`.env` is git-ignored, so keys never get committed. Anything set in the shell
+overrides it -- `INTERVIEW_AI=off npm start` runs one session without Claude.
+The tests never read `.env`. The AWS account needs Bedrock access to the model
+in `INTERVIEW_MODEL`.
 
 ## Running the tests
 
@@ -98,6 +134,24 @@ All endpoints below (except `/signup`, `/login`) require
 - `POST /prompts/{id}/response` -- `{"response", "output_media_filename"?,
   "output_media_base64"?, "cost"?}` -> `200 {"ok": true}` (adds `cost` to the
   conversation's running total)
+
+### Interview
+
+An interview is a conversation where the replies come from the interviewer.
+Its first question is stored on the conversation (`interview_mode`,
+`opening_question`); after that each prompt is one answer (`content`) and the
+question asked next (`response`). Each call returns `{"question"}`; a failed
+question is `502` (or `503` if Bedrock is busy), and the answer is kept.
+
+- `POST /conversations/{id}/interview/start` -- `{"mode"}`, one of `Stages`,
+  `People`, `Moments`, `Lessons` -> `201 {"mode", "question"}`. Starting again
+  returns the same question (`200`).
+- `POST /conversations/{id}/interview/answer` -- `{"content"}` ->
+  `201 {"prompt_id", "question"}`
+- `POST /conversations/{id}/interview/skip` -- replaces the latest question
+  with a different one; if the latest answer never got a question, asks it
+- `POST /conversations/{id}/interview/story` -> `{"story"}`, a first-person
+  draft of the interview for the publish dialog. Not saved.
 
 ### Stories
 
@@ -154,9 +208,12 @@ the other side agrees. Declining deletes the row, so the pair can try again.
 - `public/login.html` + `loginScript.js` -- login/signup form
 - `public/index.html` + `profile.js` -- profile page, guarded behind a valid
   session
-- `public/index.html`'s "Story" tab + `testChat.js` -- a conversation list +
-  chat UI exercising `/conversations` and `/prompts`; user-only input, with a
-  canned (not real-AI) assistant reply generated and persisted per message
+- `public/index.html`'s "Story" tab + `testChat.js` -- the interview: pick a
+  mode, start an interview, answer (typed or out loud), skip a question, and
+  "Write my story" into the publish dialog, all through `/interview`
+- `public/voiceInput.js` -- answering out loud with the browser's speech
+  recognition (Chrome, Edge, Safari); dictates into the answer box with a live
+  caption, and the mic button hides where it isn't supported
 - `public/stories.js` -- the publish dialog above that chat, the story reader,
   and the Friends/Community feeds, all rendered from `/stories`
 - `public/friends.js` -- the Friends tab's people panel (search, requests,

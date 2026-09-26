@@ -85,22 +85,37 @@
                     <h2>Tell Your Story</h2>
                     <div class="testLayout">
                         <aside class="testSidebar">
-                            <button id="newTestConversationBtn">+ New conversation</button>
+                            <label class="interviewModeLabel">Interview mode
+                                <select id="interviewModeSelect">
+                                    <option value="Stages">Stages: a stage of your life</option>
+                                    <option value="People">People: someone who mattered</option>
+                                    <option value="Moments">Moments: a memorable moment</option>
+                                    <option value="Lessons">Lessons: what life taught you</option>
+                                </select>
+                            </label>
+                            <button id="newTestConversationBtn">+ New interview</button>
                             <ul id="testConversationList" class="testConversationList"></ul>
                         </aside>
                         <div class="testMain">
                             <div id="testEmptyState" class="testEmptyState">
-                                Select a conversation, or start a new one.
+                                Pick an interview mode and start a new interview, or open an earlier one.
                             </div>
                             <div id="testConversationPanel" class="testConversationPanel hidden">
                                 <div class="storyPublishBar">
                                     <span id="storyPublishStatus" class="storyPublishStatus">Not published</span>
+                                    <button type="button" id="writeStoryBtn">Write my story</button>
                                     <button type="button" id="publishStoryBtn">Publish story</button>
                                 </div>
                                 <div id="testMessageList" class="message-list"></div>
+                                <p id="liveCaption" class="liveCaption hidden" aria-live="polite"></p>
                                 <form id="testMessageForm" class="message-form">
-                                    <textarea id="testMessageInput" placeholder="Say something..." required></textarea>
-                                    <button type="submit">Send</button>
+                                    <textarea id="testMessageInput" placeholder="Tell your story..." required></textarea>
+                                    <div class="messageActions">
+                                        <button type="button" id="micBtn" class="micButton" title="Answer out loud"
+                                            aria-label="Answer out loud" aria-pressed="false">🎤</button>
+                                        <button type="button" id="skipQuestionBtn">Skip question</button>
+                                        <button type="submit" id="testSendBtn">Send</button>
+                                    </div>
                                 </form>
                             </div>
                         </div>
@@ -230,6 +245,7 @@
         <script type="text/javascript" src="script.js"></script>
         <script type="text/javascript" src="profile.js"></script>
         <script type="text/javascript" src="family.js"></script>
+        <script type="text/javascript" src="voiceInput.js"></script>
         <script type="text/javascript" src="testChat.js"></script>
         <script type="text/javascript" src="stories.js"></script>
         <script type="text/javascript" src="friends.js"></script>

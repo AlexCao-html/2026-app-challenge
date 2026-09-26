@@ -278,8 +278,9 @@ storyAddFriendBtn.addEventListener("click", async () => {
 // ---- Publishing ----
 
 // Opened from the Story tab. An already-published conversation pre-fills the
-// form with its story so the dialog doubles as the edit screen.
-async function openPublishModal(conversationId) {
+// form with its story so the dialog doubles as the edit screen. `draft` is the
+// interviewer's write-up ("Write my story"), which replaces the story text.
+async function openPublishModal(conversationId, { draft } = {}) {
     storyState.publishingConversationId = conversationId;
     show(publishError, false);
 
@@ -303,7 +304,7 @@ async function openPublishModal(conversationId) {
     publishVisibilitySelect.value = story?.visibility || "friends";
     // Blank means "use what's in the conversation" -- the server rebuilds the
     // text from the author's messages (see ../stories.js).
-    publishContentInput.value = story?.content || (await conversationText(conversationId));
+    publishContentInput.value = draft || story?.content || (await conversationText(conversationId));
 
     show(publishModal, true);
     publishTitleInput.focus();
