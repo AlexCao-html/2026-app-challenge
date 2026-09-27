@@ -139,7 +139,7 @@ main > section#selfSection h2 {
     font-weight: 600;
 }
 #familySection > img {
-    height: 5vh
+    height: 5vh;
 }
 #logoutButton {
     display: block;
@@ -341,7 +341,7 @@ main > section#selfSection h2 {
     border-top-left-radius: 50px;
 }
 #featuredStory {
-    width: 80vw;
+    width: 60vw;
     margin: 0 10vw 5vh;
     box-shadow: 1px 5px 8px 5px #bfbfbf22;
     cursor: pointer;
@@ -362,7 +362,7 @@ main > section#selfSection h2 {
     padding-left: 5px;
 }
 #featuredStory img {
-    width: 80vw;
+    width: 60vw;
     height: 10vh;
     object-fit: cover;
     border-top-left-radius: 50px;
@@ -748,4 +748,38 @@ body.restoringPage main > section {
 #storyImageUpload {
     display: block;
     margin: 1vh auto 0;
+}
+#friendsSection > img {
+    display: block;
+    margin: 0 auto 2vh;
+    height: 4vh;
+}
+.friendsBackground {
+    position: absolute;
+    z-index: -999;
+    width: 80vw;
+    height: 91vh;
+    top: 9vh;
+    right: 0;
+    background-image: linear-gradient(45deg, #98d7ff, #f4f1ec 20%, #f4f1ec 50%,#f87964);
+}
+#friendsSection {
+    padding-top: 3vh;
+}
+#communitySection > img {
+    display: block;
+    margin: 0 auto 2vh;
+    height: 5vh;
+}
+.communityBackground {
+    position: absolute;
+    z-index: -999;
+    width: 80vw;
+    height: 90vh;
+    top: 10vh;
+    right: 0;
+    background-image: linear-gradient(45deg, #98d7ff, #f4f1ec 20%, #f4f1ec 50%,#f87964);
+}
+#communitySection {
+    padding-top: 3vh;
 }

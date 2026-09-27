@@ -26,5 +26,4 @@ function goToLogin() {
 })();
 
 // Two ways out: the button in the header and the one on the account page.
-document.querySelector("#logoutButton").addEventListener("click", goToLogin);
-document.querySelector("#headerLogoutButton").addEventListener("click", goToLogin);
+$("#headerLogoutButton").click(goToLogin);
