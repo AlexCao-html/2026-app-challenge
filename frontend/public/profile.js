@@ -25,5 +25,5 @@ function goToLogin() {
     }
 })();
 
-// Two ways out: the button in the header and the one on the account page.
-$("#headerLogoutButton").click(goToLogin);
+// The only way out is the button in the header's nav bar.
+document.querySelector("#headerLogoutButton").addEventListener("click", goToLogin);

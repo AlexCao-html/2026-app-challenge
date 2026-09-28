@@ -137,6 +137,27 @@ const storageApi = {
     });
   },
 
+  // ---- Interview (Story tab) ----
+  // An interview is a conversation whose replies come from the interviewer
+  // (see ../interview.js). Each call returns the interviewer's `question`.
+
+  startInterview(conversationId, mode) {
+    return apiFetch(`/conversations/${conversationId}/interview/start`, { method: "POST", body: { mode } });
+  },
+
+  answerInterview(conversationId, content) {
+    return apiFetch(`/conversations/${conversationId}/interview/answer`, { method: "POST", body: { content } });
+  },
+
+  skipInterviewQuestion(conversationId) {
+    return apiFetch(`/conversations/${conversationId}/interview/skip`, { method: "POST" });
+  },
+
+  // { story } -- a draft for the publish dialog; nothing is saved.
+  draftInterviewStory(conversationId) {
+    return apiFetch(`/conversations/${conversationId}/interview/story`, { method: "POST" });
+  },
+
   // ---- Family tree ----
   // Both return the caller's own tree: { rows: [ { members: [ { name, photo } ] } ] }.
 

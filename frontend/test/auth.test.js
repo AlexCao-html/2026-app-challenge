@@ -26,6 +26,7 @@ test.before(async () => {
 
 test.after(async () => {
     await new Promise((resolve) => server.close(resolve));
+    db.close(); // Windows won't delete a file that's still open
     fs.rmSync(process.env.DATABASE_PATH, { force: true });
     fs.rmSync(process.env.MEDIA_ROOT, { recursive: true, force: true });
 });

@@ -40,6 +40,19 @@ db.exec(`
     )
 `);
 
+// A "Tell Your Story" conversation is an interview (see ../interview.js):
+// interview_mode picks the interviewer's angle, and opening_question is the
+// interviewer's first question -- the one turn that isn't the response to a
+// prompt, because it comes before the user has said anything. Both arrived
+// after the table did, so an existing app.db gets them added.
+const conversationColumns = db.prepare("PRAGMA table_info(conversation)").all();
+if (!conversationColumns.some((column) => column.name === "interview_mode")) {
+    db.exec("ALTER TABLE conversation ADD COLUMN interview_mode TEXT");
+}
+if (!conversationColumns.some((column) => column.name === "opening_question")) {
+    db.exec("ALTER TABLE conversation ADD COLUMN opening_question TEXT");
+}
+
 db.exec(`
     CREATE TABLE IF NOT EXISTS prompts (
         prompt_id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -125,7 +125,9 @@ main {
 main > section h2, main > section h3 {
     text-align: center;
 }
-main > section#selfSection img {
+/* Direct child only: the story cards further down the Me tab have images of
+   their own, and they shouldn't turn into giant profile circles. */
+main > section#selfSection > img {
     display: block;
     margin-left: 10vw;
     position: absolute;
@@ -564,6 +566,83 @@ body.restoringPage main > section {
     background-color: #a0ffa0;
 }
 
+/* ---- Interviewing (Story tab) ---- */
+.interviewModeLabel {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 1vh;
+    font-size: 0.9em;
+    color: #555555;
+}
+#interviewModeSelect {
+    padding: 8px;
+    border: 1px solid #cccccc;
+    border-radius: 10px;
+    font-family: inherit;
+    background-color: #ffffff;
+}
+#writeStoryBtn {
+    padding: 8px 16px;
+    border: 1px solid #bfffbf;
+    border-radius: 10px;
+    background-color: #ffffff;
+    cursor: pointer;
+}
+#writeStoryBtn:hover {
+    background-color: #efffef;
+}
+.messageActions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.storyPublishBar button:disabled,
+.message-form button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+.message-form .micButton {
+    font-size: 1.2em;
+    background-color: #ffffff;
+    border: 1px solid #cccccc;
+}
+.message-form .micButton.listening {
+    background-color: #ff6b6b;
+    border-color: #ff6b6b;
+    animation: micPulse 1.4s ease-in-out infinite;
+}
+@keyframes micPulse {
+    0%, 100% { box-shadow: 0 0 0 0 #ff6b6b88; }
+    50% { box-shadow: 0 0 0 6px #ff6b6b00; }
+}
+.message-form .micButton.hidden {
+    display: none;
+}
+/* The words the recognizer is still working out, before they reach the box. */
+.liveCaption {
+    margin: 0 2vw 1vh;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background-color: #000000bb;
+    color: #ffffff;
+    font-style: italic;
+}
+.liveCaption.hidden {
+    display: none;
+}
+.message-assistant.pending {
+    color: #888888;
+    letter-spacing: 2px;
+}
+.message-error {
+    align-self: center;
+    max-width: 90%;
+    background-color: #ffe5e5;
+    color: #a00000;
+    font-size: 0.9em;
+}
+
 /* ---- Dialogs (publish form, story reader) ---- */
 .modalOverlay {
     position: fixed;
@@ -744,6 +823,19 @@ body.restoringPage main > section {
     padding: 2vh 5vw;
     color: #555555;
     text-align: center;
+}
+/* The Me tab's own stories sit below the profile picture, which is absolutely
+   positioned (top 8vh, 20vw tall) and so takes up no room in the flow. */
+.myStoriesBlock {
+    margin-top: calc(8vh + 20vw + 4vh);
+}
+.visibilityBadge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    background-color: #ffffff88;
+    color: #444444;
+    font-size: 0.85em;
 }
 #storyImageUpload {
     display: block;

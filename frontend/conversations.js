@@ -17,6 +17,48 @@ function ownedConversation(conversationId, userId) {
     return conversation;
 }
 
+function promptsOf(conversationId) {
+    return db
+        .prepare("SELECT * FROM prompts WHERE conversation_id = ? ORDER BY prompt_time, prompt_id")
+        .all(conversationId);
+}
+
+// Shared with ../interview.js, whose answers are prompts like any other.
+function insertPrompt(conversationId, { content, inputMediaFilename, inputMediaBase64 } = {}) {
+    let inputMediaPath = null;
+    if (inputMediaBase64) {
+        inputMediaPath = saveMedia(conversationId, inputMediaFilename || "input", inputMediaBase64);
+    }
+
+    const info = db
+        .prepare(
+            "INSERT INTO prompts (conversation_id, prompt_time, content, response, input_media, output_media) VALUES (?, ?, ?, NULL, ?, NULL)"
+        )
+        .run(conversationId, new Date().toISOString(), content, inputMediaPath);
+
+    appendTranscript(conversationId, `[${new Date().toISOString()}] USER: ${content}`);
+    return Number(info.lastInsertRowid);
+}
+
+function saveResponse(prompt, { response, outputMediaFilename, outputMediaBase64, cost } = {}) {
+    let outputMediaPath = null;
+    if (outputMediaBase64) {
+        outputMediaPath = saveMedia(prompt.conversation_id, outputMediaFilename || "output", outputMediaBase64);
+    }
+
+    db.prepare("UPDATE prompts SET response = ?, output_media = ? WHERE prompt_id = ?").run(
+        response,
+        outputMediaPath,
+        prompt.prompt_id
+    );
+    appendTranscript(prompt.conversation_id, `[${new Date().toISOString()}] AI: ${response}`);
+
+    db.prepare("UPDATE conversation SET cost = cost + ? WHERE conversation_id = ?").run(
+        Number(cost || 0),
+        prompt.conversation_id
+    );
+}
+
 router.post("/conversations", requireAuth, (req, res) => {
     const info = db
         .prepare("INSERT INTO conversation (user_id, conversation, creation_date, cost) VALUES (?, NULL, ?, 0)")
@@ -43,10 +85,7 @@ router.get("/conversations/:id", requireAuth, (req, res) => {
 
 router.get("/conversations/:id/prompts", requireAuth, (req, res) => {
     ownedConversation(Number(req.params.id), req.user.id);
-    const rows = db
-        .prepare("SELECT * FROM prompts WHERE conversation_id = ? ORDER BY prompt_time")
-        .all(Number(req.params.id));
-    res.json(rows);
+    res.json(promptsOf(Number(req.params.id)));
 });
 
 router.post("/conversations/:id/prompts", requireAuth, (req, res) => {
@@ -56,19 +95,12 @@ router.post("/conversations/:id/prompts", requireAuth, (req, res) => {
     const content = req.body?.content;
     if (!content) throw new ApiError(400, "Prompt content cannot be empty");
 
-    let inputMediaPath = null;
-    if (req.body?.input_media_base64) {
-        inputMediaPath = saveMedia(conversationId, req.body.input_media_filename || "input", req.body.input_media_base64);
-    }
-
-    const info = db
-        .prepare(
-            "INSERT INTO prompts (conversation_id, prompt_time, content, response, input_media, output_media) VALUES (?, ?, ?, NULL, ?, NULL)"
-        )
-        .run(conversationId, new Date().toISOString(), content, inputMediaPath);
-
-    appendTranscript(conversationId, `[${new Date().toISOString()}] USER: ${content}`);
-    res.status(201).json({ prompt_id: Number(info.lastInsertRowid) });
+    const promptId = insertPrompt(conversationId, {
+        content,
+        inputMediaFilename: req.body?.input_media_filename,
+        inputMediaBase64: req.body?.input_media_base64,
+    });
+    res.status(201).json({ prompt_id: promptId });
 });
 
 router.post("/prompts/:id/response", requireAuth, (req, res) => {
@@ -80,26 +112,13 @@ router.post("/prompts/:id/response", requireAuth, (req, res) => {
     const response = req.body?.response;
     if (!response) throw new ApiError(400, "Response content cannot be empty");
 
-    let outputMediaPath = null;
-    if (req.body?.output_media_base64) {
-        outputMediaPath = saveMedia(
-            prompt.conversation_id,
-            req.body.output_media_filename || "output",
-            req.body.output_media_base64
-        );
-    }
-
-    db.prepare("UPDATE prompts SET response = ?, output_media = ? WHERE prompt_id = ?").run(
+    saveResponse(prompt, {
         response,
-        outputMediaPath,
-        promptId
-    );
-    appendTranscript(prompt.conversation_id, `[${new Date().toISOString()}] AI: ${response}`);
-
-    const cost = Number(req.body?.cost || 0);
-    db.prepare("UPDATE conversation SET cost = cost + ? WHERE conversation_id = ?").run(cost, prompt.conversation_id);
-
+        outputMediaFilename: req.body?.output_media_filename,
+        outputMediaBase64: req.body?.output_media_base64,
+        cost: req.body?.cost,
+    });
     res.json({ ok: true });
 });
 
-module.exports = { router };
+module.exports = { router, ownedConversation, promptsOf, insertPrompt, saveResponse };
