@@ -45,6 +45,8 @@ const storyModalContent = document.querySelector("#storyModalContent");
 const storyModalCloseBtn = document.querySelector("#storyModalCloseBtn");
 const storyAddFriendBtn = document.querySelector("#storyAddFriendBtn");
 
+const myStoriesGrid = document.querySelector("#myStories");
+const myStoriesEmpty = document.querySelector("#myStoriesEmpty");
 const friendStoriesGrid = document.querySelector("#friendStories");
 const friendStoriesEmpty = document.querySelector("#friendStoriesEmpty");
 const featuredStory = document.querySelector("#featuredStory");
@@ -102,9 +104,20 @@ function bylineLine(story) {
     return byline;
 }
 
+// Who can read one of your own stories, in place of the "By you" byline.
+function visibilityLine(story) {
+    const line = document.createElement("p");
+    const badge = document.createElement("span");
+    badge.className = "visibilityBadge";
+    badge.textContent = VISIBILITY_LABELS[story.visibility] || story.visibility;
+    line.appendChild(badge);
+    return line;
+}
+
 // `className` picks up the existing card styling: .friendStory in the Friends
-// grid, .otherStory in the Community grid.
-function storyCard(story, className) {
+// grid (and the Me tab), .otherStory in the Community grid. `own` swaps the
+// byline for who the story is shared with.
+function storyCard(story, className, { own = false } = {}) {
     const card = document.createElement("div");
     card.className = className;
 
@@ -126,18 +139,32 @@ function storyCard(story, className) {
 
     const setting = settingLine(story);
     if (setting) card.appendChild(setting);
-    card.appendChild(bylineLine(story));
+    card.appendChild(own ? visibilityLine(story) : bylineLine(story));
 
     card.addEventListener("click", () => openStoryReader(story.story_id));
     return card;
 }
 
-function renderCards(container, stories, className) {
+function renderCards(container, stories, className, options) {
     container.innerHTML = "";
-    for (const story of stories) container.appendChild(storyCard(story, className));
+    for (const story of stories) container.appendChild(storyCard(story, className, options));
 }
 
 // ---- Feeds ----
+
+// Everything the user has published, whatever its visibility. This is the
+// only place an "Only me" story shows up -- the Friends feed leaves out your
+// own stories and the Community feed only has public ones.
+async function refreshMyStories() {
+    let stories = [];
+    try {
+        stories = await storageApi.listMyStories();
+    } catch (err) {
+        stories = [];
+    }
+    renderCards(myStoriesGrid, stories, "friendStory", { own: true });
+    show(myStoriesEmpty, stories.length === 0);
+}
 
 async function refreshFriendStories() {
     let stories = [];
@@ -150,8 +177,10 @@ async function refreshFriendStories() {
     show(friendStoriesEmpty, stories.length === 0);
 }
 
-// Newest public story is the featured one; everything older fills the grid
-// below it, so a single published story doesn't appear twice.
+// The featured slot holds the earliest public story, so it stays put as new
+// ones are published; everything else fills the "Recent Stories" grid below
+// it, newest first (the order the server sends), so a single published story
+// doesn't appear twice.
 async function refreshCommunityStories() {
     let stories = [];
     try {
@@ -160,7 +189,8 @@ async function refreshCommunityStories() {
         stories = [];
     }
 
-    const [featured, ...rest] = stories;
+    const featured = stories.at(-1);
+    const rest = stories.slice(0, -1);
     renderFeatured(featured || null);
     renderCards(communityStoriesGrid, rest, "otherStory");
     show(communityStoriesEmpty, Boolean(featured) && rest.length === 0);
@@ -170,6 +200,7 @@ function renderFeatured(story) {
     show(featuredStory, Boolean(story));
     show(communityFeaturedEmpty, !story);
     featuredStory.innerHTML = "";
+    featuredStory.onclick = null;
     if (!story) return;
 
     const photo = document.createElement("img");
@@ -204,12 +235,16 @@ function renderFeatured(story) {
     }
 
     featuredStory.appendChild(bylineLine(story));
-    featuredStory.addEventListener("click", () => openStoryReader(story.story_id));
+    // Assigned rather than added: #featuredStory is the same element across
+    // refreshes, and stacked listeners would each open a story that used to be
+    // featured, with whichever request finished last winning.
+    featuredStory.onclick = () => openStoryReader(story.story_id);
 }
 
 // Called by friends.js too: accepting a request changes what the Friends feed
 // should be showing.
 function refreshStoryFeeds() {
+    refreshMyStories();
     refreshFriendStories();
     refreshCommunityStories();
 }
@@ -424,6 +459,7 @@ document.addEventListener("keydown", (event) => {
 
 // Feeds are loaded once at startup and refreshed when their tab is opened, so
 // a story someone else published shows up without a full page reload.
+$("#self").click(refreshMyStories);
 $("#friends").click(refreshFriendStories);
 $("#community").click(refreshCommunityStories);
 refreshStoryFeeds();

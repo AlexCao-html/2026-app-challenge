@@ -125,7 +125,9 @@ main {
 main > section h2, main > section h3 {
     text-align: center;
 }
-main > section#selfSection img {
+/* Direct child only: the story cards further down the Me tab have images of
+   their own, and they shouldn't turn into giant profile circles. */
+main > section#selfSection > img {
     display: block;
     margin-left: 10vw;
     position: absolute;
@@ -821,6 +823,19 @@ body.restoringPage main > section {
     padding: 2vh 5vw;
     color: #555555;
     text-align: center;
+}
+/* The Me tab's own stories sit below the profile picture, which is absolutely
+   positioned (top 8vh, 20vw tall) and so takes up no room in the flow. */
+.myStoriesBlock {
+    margin-top: calc(8vh + 20vw + 4vh);
+}
+.visibilityBadge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    background-color: #ffffff88;
+    color: #444444;
+    font-size: 0.85em;
 }
 #storyImageUpload {
     display: block;
