@@ -23,15 +23,23 @@ class ApiError extends Error {
   }
 }
 
+// HTTP/2 and HTTP/3 -- which is what Render (and most hosts) serve over --
+// carry no reason phrase, so statusText is "" there even though it reads
+// "Unauthorized" on localhost. Without this, a non-JSON error shows the user an
+// empty message and the button looks like it did nothing.
+function fallbackDetail(response) {
+  return response.statusText || `Request failed (${response.status})`;
+}
+
 async function parseErrorDetail(response) {
   try {
     const body = await response.json();
     // Express sends {error}; the old Python/FastAPI backend sent {detail}.
     // Accept either, so the real reason reaches the user instead of a bare
     // "Bad Request" from response.statusText.
-    return body.error ?? body.detail ?? response.statusText;
+    return body.error ?? body.detail ?? fallbackDetail(response);
   } catch {
-    return response.statusText;
+    return fallbackDetail(response);
   }
 }
 
