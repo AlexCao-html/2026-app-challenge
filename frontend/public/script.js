@@ -101,7 +101,7 @@ $("#accountSettingsButton").click(() => showPage("self"));
 // ---- Restoring on load ----
 
 // Only worth hiding anything if we're actually going to move the user: a
-// signed-out visitor gets bounced to login.html by profile.js, and a saved page
+// signed-out visitor gets bounced to login.html by authGuard.js, and a saved page
 // that's already the active one needs no restore. Everyone else would otherwise
 // watch the default page flash past before the swap, so hide main until the
 // auth check comes back (see .restoringPage in style.css).

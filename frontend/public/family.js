@@ -106,7 +106,7 @@ async function refreshFamilyTree() {
 
 function handleFamilyError(err, action) {
     if (err?.status === 401) {
-        window.location.href = "login.html";
+        window.location.replace("login.html");
         return;
     }
 

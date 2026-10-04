@@ -1,6 +1,8 @@
-function goToLogin() {
-    storageApi.logout();
-    window.location.href = "login.html";
+// Waits for logout() so the token is really gone before the page unloads, and
+// uses replace() so the back arrow can't return to this page afterwards.
+async function goToLogin() {
+    await storageApi.logout();
+    window.location.replace("login.html");
 }
 
 (async function loadProfile() {

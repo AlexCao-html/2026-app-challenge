@@ -28,7 +28,8 @@ async function handleSubmit() {
             await storageApi.signup({ username, email, password });
         }
         await storageApi.login({ email, password });
-        window.location.href = "index.html";
+        // replace() so the back arrow from the main page doesn't land back here.
+        window.location.replace("index.html");
     } catch (err) {
         if (err instanceof ApiError) {
             setError(err.detail);

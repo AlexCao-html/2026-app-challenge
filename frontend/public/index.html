@@ -6,6 +6,11 @@
         <meta http-equiv="X-UA-Compatible" content="ie=edge" />
         <title>ReelLife</title>
         <link rel="stylesheet" href="style.css" />
+        <!-- In <head> so authGuard.js can turn signed-out visitors away before
+             the page renders; everything below the body uses storageApi too. -->
+        <script type="text/javascript" src="config.js"></script>
+        <script type="text/javascript" src="storage_api.js"></script>
+        <script type="text/javascript" src="authGuard.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     </head>
     <body>
@@ -248,8 +253,6 @@
                 </div>
             </div>
         </div>
-        <script type="text/javascript" src="config.js"></script>
-        <script type="text/javascript" src="storage_api.js"></script>
         <!-- script.js defines restoreLastPage(), which profile.js calls. -->
         <script type="text/javascript" src="script.js"></script>
         <script type="text/javascript" src="profile.js"></script>
