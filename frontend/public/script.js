@@ -18,6 +18,7 @@ const PAGE_SECTIONS = {
     self: "#selfSection",
     family: "#familySection",
     story: "#tellYourStorySection",
+    history: "#historySection",
     friends: "#friendsSection",
     community: "#communitySection",
 };

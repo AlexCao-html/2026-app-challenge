@@ -14,7 +14,7 @@
 html, body {
     overflow-x: hidden !important;
 }
-main:has(#selfSection.active) ~ header #self, main:has(#familySection.active) ~ header #family, main:has(#tellYourStorySection.active) ~ header #story, main:has(#friendsSection.active) ~ header #friends, main:has(#communitySection.active) ~ header #community {
+main:has(#selfSection.active) ~ header #self, main:has(#familySection.active) ~ header #family, main:has(#tellYourStorySection.active) ~ header #story, main:has(#historySection.active) ~ header #history, main:has(#friendsSection.active) ~ header #friends, main:has(#communitySection.active) ~ header #community {
     font-weight: 900;
 }
 .wrapper {
@@ -874,4 +874,77 @@ body.restoringPage main > section {
 }
 #communitySection {
     padding-top: 3vh;
+}
+/* ---- History tab: every story "Write my story" has written ---- */
+#historySection {
+    padding-top: 3vh;
+}
+.historyBackground {
+    position: absolute;
+    z-index: -999;
+    width: 80vw;
+    height: 91vh;
+    top: 9vh;
+    right: 0;
+    background-image: linear-gradient(45deg, #98d7ff, #f4f1ec 20%, #f4f1ec 50%,#f87964);
+}
+.historyIntro {
+    margin: 1vh 0 2vh;
+    color: #555555;
+    text-align: center;
+}
+.historyList {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2vh;
+    margin: 0 5vw;
+}
+.historyItem {
+    padding: 2vmin 2.5vmin;
+    border-radius: 30px;
+    background-color: #ffffff88;
+    backdrop-filter: blur(10px);
+    box-shadow: 1px 3px 6px 2px #00000022;
+}
+main > section .historyItem h3 {
+    text-align: left;
+    font-size: 0.95em;
+    font-weight: 700;
+    color: #444444;
+    margin-bottom: 1vh;
+}
+.historyText {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    line-height: 1.5;
+}
+.historyText.folded {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    overflow: hidden;
+}
+.historyActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 1.5vh;
+}
+.historyActions button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 10px;
+    background-color: #dfdfdf;
+    cursor: pointer;
+}
+.historyActions .primaryButton {
+    background-color: #bfffbf;
+}
+.historyActions button:hover {
+    filter: brightness(0.95);
+}
+.historyActions .dangerButton {
+    background-color: #ffcfcf;
 }

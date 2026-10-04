@@ -32,6 +32,7 @@ app.js            Express app: JSON body parsing, static files, the two
                    routers below, error-handling middleware
 auth.js           /signup /login /logout /whoami + the requireAuth middleware
 conversations.js  /conversations, /prompts
+drafts.js         /drafts -- the History tab: every "Write my story" draft
 interview.js      /conversations/{id}/interview/* -- the Story tab's interview
 interviewer.js    what the interviewer says: Claude on AWS Bedrock, or canned
                    questions when that isn't switched on
@@ -41,8 +42,8 @@ db.js             node:sqlite connection + schema (CREATE TABLE IF NOT EXISTS)
 security.js       password hashing + session token helpers
 storage.js        transcript/media file helpers
 errors.js         ApiError(status, message)
-test/             node --test suite (auth, conversations, family, friends,
-                   stories)
+test/             node --test suite (auth, conversations, drafts, family,
+                   friends, interview, stories)
 public/           static frontend (see below)
 ```
 
@@ -150,8 +151,19 @@ question is `502` (or `503` if Bedrock is busy), and the answer is kept.
   `201 {"prompt_id", "question"}`
 - `POST /conversations/{id}/interview/skip` -- replaces the latest question
   with a different one; if the latest answer never got a question, asks it
-- `POST /conversations/{id}/interview/story` -> `{"story"}`, a first-person
-  draft of the interview for the publish dialog. Not saved.
+- `POST /conversations/{id}/interview/story` -> `{"story", "draft_id",
+  "created_at"}`, a first-person draft of the interview for the publish
+  dialog. Each draft is kept in `story_drafts` for the History tab (below);
+  the story itself is only stored by publishing.
+
+### History
+
+Every draft "Write my story" has written, so one can be reopened after the
+publish dialog is closed. Drafts are private and never edited.
+
+- `GET /drafts` -- the caller's drafts, newest first: `draft_id`,
+  `conversation_id`, `interview_mode`, `content`, `created_at`
+- `DELETE /drafts/{id}` -- remove one from the history (404 if it isn't yours)
 
 ### Stories
 
@@ -211,10 +223,13 @@ the other side agrees. Declining deletes the row, so the pair can try again.
 - `public/index.html`'s "Story" tab + `testChat.js` -- the interview: pick a
   mode, start an interview, answer (typed or out loud), skip a question, and
   "Write my story" into the publish dialog, all through `/interview`
+- `public/history.js` -- the History tab: every "Write my story" draft, each
+  of which can be reopened in the publish dialog or deleted, from `/drafts`
 - `public/voiceInput.js` -- answering out loud with the browser's speech
   recognition (Chrome, Edge, Safari); dictates into the answer box with a live
   caption, and the mic button hides where it isn't supported
-- `public/stories.js` -- the publish dialog above that chat, the story reader,
-  and the Friends/Community feeds, all rendered from `/stories`
+- `public/stories.js` -- the publish dialog above that chat (which asks before
+  closing with unsaved edits), the story reader, and the Friends/Community
+  feeds, all rendered from `/stories`
 - `public/friends.js` -- the Friends tab's people panel (search, requests,
   friend list) on top of `/friends`

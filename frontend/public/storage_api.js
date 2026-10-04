@@ -161,9 +161,20 @@ const storageApi = {
     return apiFetch(`/conversations/${conversationId}/interview/skip`, { method: "POST" });
   },
 
-  // { story } -- a draft for the publish dialog; nothing is saved.
+  // { story, draft_id, created_at } -- a draft for the publish dialog, also
+  // kept in the History tab (listDrafts below).
   draftInterviewStory(conversationId) {
     return apiFetch(`/conversations/${conversationId}/interview/story`, { method: "POST" });
+  },
+
+  // ---- History (every story "Write my story" has written) ----
+
+  listDrafts() {
+    return apiFetch("/drafts");
+  },
+
+  deleteDraft(draftId) {
+    return apiFetch(`/drafts/${draftId}`, { method: "DELETE" });
   },
 
   // ---- Family tree ----

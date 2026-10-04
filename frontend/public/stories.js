@@ -17,6 +17,12 @@ const storyState = {
     // it already has (null when publishing for the first time).
     publishingConversationId: null,
     publishingStory: null,
+    // The form's values as the dialog opened with them, so closing can tell
+    // whether anything has been typed since (publishFormDirty).
+    publishingSnapshot: null,
+    // True when the story text came from "Write my story", which keeps a copy
+    // in the History tab -- worth saying when asking to discard edits.
+    publishingDraft: false,
     // The story open in the reader, so "Add friend" knows whose it is.
     readingStory: null,
 };
@@ -341,8 +347,34 @@ async function openPublishModal(conversationId, { draft } = {}) {
     // text from the author's messages (see ../stories.js).
     publishContentInput.value = draft || story?.content || (await conversationText(conversationId));
 
+    storyState.publishingSnapshot = publishFormValues();
+    storyState.publishingDraft = Boolean(draft);
     show(publishModal, true);
     publishTitleInput.focus();
+}
+
+function publishFormValues() {
+    return JSON.stringify(
+        [
+            publishTitleInput,
+            publishSummaryInput,
+            publishPlaceInput,
+            publishTimePeriodInput,
+            publishTagsInput,
+            publishVisibilitySelect,
+            publishContentInput,
+        ].map((input) => input.value)
+    );
+}
+
+// Edited since the dialog opened. A fresh "Write my story" draft on its own
+// doesn't count: nothing has been typed, and History already has a copy.
+function publishFormDirty() {
+    return (
+        !publishModal.classList.contains("hidden") &&
+        storyState.publishingSnapshot !== null &&
+        publishFormValues() !== storyState.publishingSnapshot
+    );
 }
 
 // The author's own messages, which is exactly what the server would derive on
@@ -364,11 +396,32 @@ function closePublishModal() {
     show(publishModal, false);
     storyState.publishingConversationId = null;
     storyState.publishingStory = null;
+    storyState.publishingSnapshot = null;
+    storyState.publishingDraft = false;
 }
 
-publishCancelBtn.addEventListener("click", closePublishModal);
+// Cancel, a click outside the dialog and Esc all come through here; publishing
+// and unpublishing close it directly, since there's nothing left to lose.
+function requestClosePublishModal() {
+    if (publishFormDirty()) {
+        let message = "You have unsaved changes to this story. Close without saving them?";
+        if (storyState.publishingDraft) {
+            message += '\n\nThe original story from "Write my story" is still in the History tab.';
+        }
+        if (!confirm(message)) return;
+    }
+    closePublishModal();
+}
+
+publishCancelBtn.addEventListener("click", requestClosePublishModal);
 publishModal.addEventListener("click", (event) => {
-    if (event.target === publishModal) closePublishModal();
+    if (event.target === publishModal) requestClosePublishModal();
+});
+
+// Reloading, closing the tab or logging out with edits in the dialog gets the
+// browser's own "Leave site?" prompt.
+window.addEventListener("beforeunload", (event) => {
+    if (publishFormDirty()) event.preventDefault();
 });
 
 publishForm.addEventListener("submit", async (event) => {
@@ -453,7 +506,7 @@ publishStoryBtn.addEventListener("click", () => {
 // Esc closes whichever dialog is open.
 document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
-    if (!publishModal.classList.contains("hidden")) closePublishModal();
+    if (!publishModal.classList.contains("hidden")) requestClosePublishModal();
     if (!storyModal.classList.contains("hidden")) show(storyModal, false);
 });
 

@@ -15,6 +15,7 @@ if (require.main === module && fs.existsSync(ENV_FILE)) {
 
 const { router: authRouter } = require('./auth');
 const { router: conversationsRouter } = require('./conversations');
+const { router: draftsRouter } = require('./drafts');
 const { router: familyRouter } = require('./family');
 const { router: friendsRouter } = require('./friends');
 const { router: interviewRouter } = require('./interview');
@@ -30,6 +31,7 @@ app.use(express.json());
 // Python/FastAPI version, which is kept around unused for reference).
 app.use(authRouter);
 app.use(conversationsRouter);
+app.use(draftsRouter);
 app.use(familyRouter);
 app.use(friendsRouter);
 app.use(interviewRouter);

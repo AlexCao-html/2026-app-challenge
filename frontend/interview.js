@@ -128,8 +128,9 @@ router.post("/conversations/:id/interview/skip", requireAuth, async (req, res) =
     res.json({ question });
 });
 
-// A draft for the publish dialog to fill in. Nothing is saved: the user edits
-// it there, and publishing is what stores it.
+// A draft for the publish dialog to fill in. The draft itself is kept in
+// story_drafts (the History tab, see ./drafts.js) so closing the dialog
+// doesn't lose it; what the user edits there is only stored by publishing.
 router.post("/conversations/:id/interview/story", requireAuth, async (req, res) => {
     const conversationId = Number(req.params.id);
     const conversation = ownedConversation(conversationId, req.user.id);
@@ -140,7 +141,12 @@ router.post("/conversations/:id/interview/story", requireAuth, async (req, res) 
         () => interviewer.draftStory(conversation.opening_question, prompts),
         "Couldn't write your story just now. Try again."
     );
-    res.json({ story });
+
+    const createdAt = new Date().toISOString();
+    const info = db
+        .prepare("INSERT INTO story_drafts (user_id, conversation_id, content, created_at) VALUES (?, ?, ?, ?)")
+        .run(req.user.id, conversationId, story, createdAt);
+    res.json({ story, draft_id: Number(info.lastInsertRowid), created_at: createdAt });
 });
 
 module.exports = { router };

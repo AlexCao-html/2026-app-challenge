@@ -4,7 +4,8 @@
 // every answer -- typed, or dictated through voiceInput.js -- is saved and
 // answered with the next question. "Skip question" swaps the latest question
 // for another, and "Write my story" has the interviewer turn the answers into
-// a draft for the publish dialog.
+// a draft for the publish dialog (the server also keeps it for the History
+// tab, history.js).
 //
 // Publishing a conversation as a story lives in stories.js, which owns the
 // publish bar above the message list; this file just tells it which
@@ -219,6 +220,7 @@ writeStoryBtn.addEventListener("click", async () => {
     setBusy(true);
     try {
         const { story } = await storageApi.draftInterviewStory(conversationId);
+        refreshHistory();
         if (stillSelected(conversationId)) await openPublishModal(conversationId, { draft: story });
     } catch (err) {
         if (stillSelected(conversationId)) appendMessage("error", errorText(err));

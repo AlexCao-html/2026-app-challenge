@@ -176,7 +176,14 @@
                     <div class="otherStories" id="communityStories"></div>
                     <p id="communityStoriesEmpty" class="feedEmpty hidden">Nothing else published yet.</p>
                 </section>
-                <section id="testSection" class="inactive s6">
+                <section id="historySection" class="inactive s6">
+                    <div class="historyBackground"></div>
+                    <h2>Story History</h2>
+                    <p class="historyIntro">Every story "Write my story" has written for you, newest first.</p>
+                    <ul id="historyList" class="historyList"></ul>
+                    <p id="historyEmpty" class="feedEmpty">
+                        Nothing here yet. Answer a few questions in the Story tab and press "Write my story".
+                    </p>
                 </section>
             </main>
             <header>
@@ -185,6 +192,7 @@
                     <div class="button" id="self"><img src="Me Icon.svg" />Me</div>
                     <div class="button" id="family"><img src="Family Icon.svg" />Family</div>
                     <div class="button" id="story"><img src="Story Icon.svg" />Story</div>
+                    <div class="button" id="history"><img src="History Icon.svg" />History</div>
                     <div class="button" id="friends"><img src="Friends Icon.svg" />Friends</div>
                     <div class="button" id="community"><img src="Community Icon.svg" />Community</div>
                 </nav>
@@ -260,6 +268,7 @@
         <script type="text/javascript" src="voiceInput.js"></script>
         <script type="text/javascript" src="testChat.js"></script>
         <script type="text/javascript" src="stories.js"></script>
+        <script type="text/javascript" src="history.js"></script>
         <script type="text/javascript" src="friends.js"></script>
         <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
         <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
